@@ -1,0 +1,53 @@
+# ==============================
+# Compilador (C/C++ + Flex/Bison)
+# ==============================
+*.o
+*.out
+*.exe
+*.a
+*.so
+*.dll
+
+# Flex/Bison intermediários
+*.tab.c
+*.tab.h
+*.yy.c
+*.output
+
+# Build directories
+/build/
+/bin/
+/dist/
+
+# ==============================
+# MkDocs
+# ==============================
+site/
+/.publish/
+/.cache/
+
+# ==============================
+# Python (para venv do mkdocs)
+# ==============================
+__pycache__/
+*.pyc
+.venv/
+env/
+
+# ==============================
+# Logs
+# ==============================
+*.log
+
+# ==============================
+# VSCode
+# ==============================
+.vscode/
+*.code-workspace
+
+# ==============================
+# macOS
+# ==============================
+.DS_Store
+.AppleDouble
+.LSOverride
