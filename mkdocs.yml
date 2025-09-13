@@ -1,0 +1,31 @@
+site_name: Trabalho de Compiladores
+site_description: Projeto desenvolvido na disciplina Compiladores 1 do curso de Engenharia de Software da UnB
+repo_url: https://github.com/Akaeboshi/comp1-equipe12-Interpretador
+
+theme:
+  name: material
+  language: pt
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - content.action.edit
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Alternar para modo escuro
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Alternar para modo claro
+
+nav:
+  - Início: index.md
