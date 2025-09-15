@@ -40,3 +40,4 @@ markdown_extensions:
 nav:
   - Início: index.md
   - Escopo da Linguagem: escopo.md
+  - Gramática Formal (CGF): gramatica.md
