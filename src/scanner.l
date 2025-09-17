@@ -5,8 +5,12 @@
 %}
 
 %%
+true              { yylval.boolValue = 1; return BOOL_LIT; }
+false             { yylval.boolValue = 0; return BOOL_LIT; }
 
-[0-9]+            { yylval.intValue = atoi(yytext); return NUM; }
+[0-9]+"."[0-9]+   { yylval.floatValue = strtod(yytext, NULL); return FLOAT_LIT; }
+
+[0-9]+            { yylval.intValue = atoi(yytext); return INT_LIT; }
 
 "+"               { return PLUS; }
 "-"               { return MINUS; }
