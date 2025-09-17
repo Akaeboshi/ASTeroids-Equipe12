@@ -12,7 +12,6 @@ theme:
     - search.highlight
     - search.suggest
     - content.code.copy
-    - content.action.edit
   palette:
     - scheme: default
       primary: indigo
@@ -27,5 +26,18 @@ theme:
         icon: material/weather-sunny
         name: Alternar para modo claro
 
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      linenums: false
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - attr_list
+
+
+
 nav:
   - Início: index.md
+  - Escopo da Linguagem: escopo.md
+  - Gramática Formal (CGF): gramatica.md

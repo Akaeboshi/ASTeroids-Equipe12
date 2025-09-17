@@ -13,6 +13,7 @@
 *.tab.h
 *.yy.c
 *.output
+parser
 
 # Build directories
 /build/
