@@ -1,0 +1,118 @@
+#include "ast.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+static void *xmalloc(size_t size) {
+  void *p = malloc(size);
+  if (!p) { fprintf(stderr, "error: malloc failed\n"); exit(1); }
+  return p;
+}
+
+static Node *new_node(NodeKind kind) {
+  Node *node = (Node *)xmalloc(sizeof(Node));
+  node->kind = kind;
+  return node;
+}
+
+Node *ast_int(long value) {
+  Node *node = new_node(ND_INT);
+  node->u.as_int.value = value;
+  return node;
+}
+
+Node *ast_float(double value) {
+  Node *node = new_node(ND_FLOAT);
+  node->u.as_float.value = value;
+  return node;
+}
+
+Node *ast_binary(BinOp op, Node *left, Node *right) {
+  Node *node = new_node(ND_BINARY);
+  node->u.as_binary.op = op;
+  node->u.as_binary.left = left;
+  node->u.as_binary.right = right;
+  return node;
+}
+
+static const char *binop_to_str(BinOp op) {
+  switch (op) {
+    case BIN_ADD: return "+";
+    case BIN_SUB: return "-";
+    case BIN_MUL: return "*";
+    case BIN_DIV: return "/";
+    default: return "?";
+  }
+}
+
+/* Versão Compacta */
+static void print (const Node *node) {
+  if(!node) { printf("NULL"); return; }
+
+  switch (node -> kind) {
+  case ND_INT:
+    printf("%ld", node -> u.as_int.value);
+    break;
+  case ND_FLOAT:
+    printf("%lf", node -> u.as_float.value);
+    break;
+  case ND_BINARY:
+    printf("(");
+    print(node -> u.as_binary.left);
+    printf(" %s ", binop_to_str(node -> u.as_binary.op));
+    print(node -> u.as_binary.right);
+    printf(")");
+    break;
+  }
+}
+
+void ast_print(const Node *node) {
+  print(node);
+  printf("\n");
+}
+
+/* Versão Indentada */
+static void print_pretty(const Node *n, int depth) {
+  if (!n) {
+    for (int i = 0; i < depth; i++) putchar(' ');
+    printf("<null>\n");
+    return;
+  }
+
+  for (int i = 0; i < depth; i++) putchar(' ');
+
+  switch (n -> kind) {
+    case ND_INT:
+      printf("Int(%ld)\n", n -> u.as_int.value);
+      break;
+    case ND_FLOAT:
+      printf("Float(%g)\n", n -> u.as_float.value);
+      break;
+    case ND_BINARY:
+      printf("Binary(%s)\n", binop_to_str(n -> u.as_binary.op));
+      print_pretty(n -> u.as_binary.left, depth + 2);
+      print_pretty(n -> u.as_binary.right, depth + 2);
+      break;
+  }
+}
+
+void ast_print_pretty(const Node *node) {
+  print_pretty(node, 0);
+}
+
+void ast_free(Node *node) {
+  if (!node) return;
+
+  switch (node->kind) {
+    case ND_INT:
+    case ND_FLOAT:
+      break;
+    case ND_BINARY:
+      ast_free(node -> u.as_binary.left);
+      ast_free(node -> u.as_binary.right);
+      break;
+  }
+
+  free(node);
+}
+
+
