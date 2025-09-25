@@ -1,10 +1,19 @@
 #include "ast.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 static void *xmalloc(size_t size) {
   void *p = malloc(size);
   if (!p) { fprintf(stderr, "error: malloc failed\n"); exit(1); }
+  return p;
+}
+
+static char *xstrdup(const char *string) {
+  size_t n = strlen(string);
+  char *p = (char *)xmalloc(n + 1);
+  if (!p) { fprintf(stderr, "error: malloc failed\n"); exit(1); }
+  memcpy(p, string, n + 1);
   return p;
 }
 
@@ -29,6 +38,12 @@ Node *ast_float(double value) {
 Node *ast_bool(bool value) {
   Node *node = new_node(ND_BOOL);
   node -> u.as_bool.value = value;
+  return node;
+}
+
+Node *ast_ident(const char *name) {
+  Node *node = new_node(ND_IDENT);
+  node -> u.as_ident.name = xstrdup(name);
   return node;
 }
 
@@ -63,6 +78,9 @@ static void print (const Node *node) {
     break;
   case ND_BOOL:
     printf("%s", node -> u.as_bool.value ? "true" : "false");
+    break;
+  case ND_IDENT:
+    printf("%s", node -> u.as_ident.name);
     break;
   case ND_BINARY:
     printf("(");
@@ -99,6 +117,9 @@ static void print_pretty(const Node *node, int depth) {
     case ND_BOOL:
       printf("Bool(%s)\n", node -> u.as_bool.value ? "true" : "false");
       break;
+    case ND_IDENT:
+      printf("Ident(%s)\n", node -> u.as_ident.name);
+      break;
     case ND_BINARY:
       printf("Binary(%s)\n", binop_to_str(node -> u.as_binary.op));
       print_pretty(node -> u.as_binary.left, depth + 2);
@@ -120,6 +141,9 @@ void ast_free(Node *node) {
     case ND_FLOAT:
       break;
     case ND_BOOL:
+      break;
+    case ND_IDENT:
+      free(node -> u.as_ident.name);
       break;
     case ND_BINARY:
       ast_free(node -> u.as_binary.left);
