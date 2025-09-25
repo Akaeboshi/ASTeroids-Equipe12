@@ -26,6 +26,12 @@ Node *ast_float(double value) {
   return node;
 }
 
+Node *ast_bool(bool value) {
+  Node *node = new_node(ND_BOOL);
+  node -> u.as_bool.value = value;
+  return node;
+}
+
 Node *ast_binary(BinOp op, Node *left, Node *right) {
   Node *node = new_node(ND_BINARY);
   node->u.as_binary.op = op;
@@ -55,6 +61,9 @@ static void print (const Node *node) {
   case ND_FLOAT:
     printf("%lf", node -> u.as_float.value);
     break;
+  case ND_BOOL:
+    printf("%s", node -> u.as_bool.value ? "true" : "false");
+    break;
   case ND_BINARY:
     printf("(");
     print(node -> u.as_binary.left);
@@ -71,8 +80,8 @@ void ast_print(const Node *node) {
 }
 
 /* Versão Indentada */
-static void print_pretty(const Node *n, int depth) {
-  if (!n) {
+static void print_pretty(const Node *node, int depth) {
+  if (!node) {
     for (int i = 0; i < depth; i++) putchar(' ');
     printf("<null>\n");
     return;
@@ -80,17 +89,20 @@ static void print_pretty(const Node *n, int depth) {
 
   for (int i = 0; i < depth; i++) putchar(' ');
 
-  switch (n -> kind) {
+  switch (node -> kind) {
     case ND_INT:
-      printf("Int(%ld)\n", n -> u.as_int.value);
+      printf("Int(%ld)\n", node -> u.as_int.value);
       break;
     case ND_FLOAT:
-      printf("Float(%g)\n", n -> u.as_float.value);
+      printf("Float(%g)\n", node -> u.as_float.value);
+      break;
+    case ND_BOOL:
+      printf("Bool(%s)\n", node -> u.as_bool.value ? "true" : "false");
       break;
     case ND_BINARY:
-      printf("Binary(%s)\n", binop_to_str(n -> u.as_binary.op));
-      print_pretty(n -> u.as_binary.left, depth + 2);
-      print_pretty(n -> u.as_binary.right, depth + 2);
+      printf("Binary(%s)\n", binop_to_str(node -> u.as_binary.op));
+      print_pretty(node -> u.as_binary.left, depth + 2);
+      print_pretty(node -> u.as_binary.right, depth + 2);
       break;
   }
 }
@@ -102,9 +114,12 @@ void ast_print_pretty(const Node *node) {
 void ast_free(Node *node) {
   if (!node) return;
 
-  switch (node->kind) {
+  switch (node -> kind) {
     case ND_INT:
+      break;
     case ND_FLOAT:
+      break;
+    case ND_BOOL:
       break;
     case ND_BINARY:
       ast_free(node -> u.as_binary.left);

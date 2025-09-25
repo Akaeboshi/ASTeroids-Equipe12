@@ -7,6 +7,7 @@
 typedef enum {
   ND_INT,       // literal inteiro
   ND_FLOAT,     // literal float
+  ND_BOOL,      // literal booleano (true/false)
   ND_BINARY     // expressão binária (+, -, *, /)
 } NodeKind;
 
@@ -30,6 +31,7 @@ struct Node {
   union {
     struct { long value; } as_int;
     struct { double value ;} as_float;
+    struct { bool value; } as_bool;
     struct { BinOp op; Node *left; Node *right; } as_binary;
   } u;
 };
@@ -37,6 +39,7 @@ struct Node {
 /* Construtores */
 Node *ast_int(long value);
 Node *ast_float(double value);
+Node *ast_bool(bool value);
 Node *ast_binary(BinOp op, Node *left, Node *right);
 
 /* Printer */
