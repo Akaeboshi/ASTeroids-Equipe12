@@ -12,6 +12,14 @@ static const char *binop_to_str(BinOp op) {
   }
 }
 
+static const char *unop_to_str(UnOp op) {
+  switch (op) {
+    case UN_NEG: return "-";
+    case UN_NOT: return "!";
+    default: return "?";
+  }
+}
+
 /* Versão Compacta */
 static void print (const Node *node) {
   if(!node) { printf("NULL"); return; }
@@ -28,6 +36,12 @@ static void print (const Node *node) {
     break;
   case ND_IDENT:
     printf("%s", node -> u.as_ident.name);
+    break;
+  case ND_UNARY:
+    printf("(");
+    printf("%s", unop_to_str(node -> u.as_unary.op));
+    print(node -> u.as_unary.expr);
+    printf(")");
     break;
   case ND_BINARY:
     printf("(");
@@ -66,6 +80,10 @@ static void print_pretty(const Node *node, int depth) {
       break;
     case ND_IDENT:
       printf("Ident(%s)\n", node -> u.as_ident.name);
+      break;
+    case ND_UNARY:
+      printf("Unary(%s)\n", unop_to_str(node -> u.as_unary.op));
+      print_pretty(node -> u.as_unary.expr, depth + 2);
       break;
     case ND_BINARY:
       printf("Binary(%s)\n", binop_to_str(node -> u.as_binary.op));

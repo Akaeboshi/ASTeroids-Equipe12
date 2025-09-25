@@ -25,6 +25,13 @@ Node *ast_ident(const char *name) {
   return node;
 }
 
+Node *ast_unary(UnOp op, Node *expr) {
+  Node *node = new_node(ND_UNARY);
+  node -> u.as_unary.op = op;
+  node -> u.as_unary.expr = expr;
+  return node;
+}
+
 Node *ast_binary(BinOp op, Node *left, Node *right) {
   Node *node = new_node(ND_BINARY);
   node -> u.as_binary.op = op;
