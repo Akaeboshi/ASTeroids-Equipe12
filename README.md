@@ -1,10 +1,11 @@
-# comp1-equipe12-Compilador 
+# ASTeroids-Equipe12 Compilador
 
 ## 📝 Introdução  
 
 Este repositório contém os materiais e estudos desenvolvidos na disciplina de **Compiladores 1** do curso de **Engenharia de Software da Universidade de Brasília (FCTE/UnB)**.  
-O objetivo é aprofundar conceitos, métodos e técnicas de compiladores.
-
+O objetivo é aprofundar conceitos, métodos e técnicas de compiladores. 
+## 📝 Documentação
+https://akaeboshi.github.io/ASTeroids-Equipe12/
 ## 🎯 Sobre Compiladores 
 
 Um **compilador** é um programa que transcreve um codigo em uma linguagem, no caso do grupo, **C++**, para outra linguagem, no caso do grupo, **javasscript**. é como um tradutor de codigo de uma linguagem para outra.
