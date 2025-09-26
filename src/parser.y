@@ -18,7 +18,14 @@ void yyerror(const char *s);
 %token <floatValue> FLOAT_LIT
 
 /* Tokens sem valor semântico */
-%token PLUS MINUS TIMES DIVIDE LPAREN RPAREN
+%token PLUS MINUS TIMES DIVIDE LPAREN RPAREN 
+
+/* Tokens dos operadores relacionais */
+%token EQ NEQ LT GT LE GE
+
+/* Tokens dos operadores lógicos e de atribuição */
+%token AND OR NOT ASSIGN
+
 
 /* Regras de precedência e associatividade */
 %left PLUS MINUS
