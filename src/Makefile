@@ -18,8 +18,8 @@ FLEX_FLAGS  =      # deixe vazio ou acrescente opções, se necessário
 
 # Parâmetros de compilação
 CC      = gcc
-CFLAGS  =
-LDFLAGS = -ll     # biblioteca do Flex (em algumas distros, pode ser -ll)
+CFLAGS  = -g
+LDFLAGS = -ll -lm     # biblioteca do Flex e math
 
 # Regra padrão (alvo 'all' vai gerar o executável)
 all: $(EXEC)
@@ -39,3 +39,7 @@ $(FLEX_C): $(FLEX_FILE)
 # Regra de limpeza: remove arquivos gerados
 clean:
 	rm -f $(EXEC) $(BISON_C) $(BISON_H) $(FLEX_C)
+
+# Regra para testar
+test:
+	./parser < test_input.txt
