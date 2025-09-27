@@ -10,7 +10,8 @@ Node *ast_ident(const char *name);
 Node *ast_unary(UnOp op, Node *expr);
 Node *ast_binary(BinOp op, Node *left, Node *right);
 Node *ast_block(void);
-Node *ast_assign(const char *name, Node *value);
 void ast_block_add_stmt(Node *block, Node *stmt);
+Node *ast_assign(const char *name, Node *value);
+Node *ast_expr(Node *expr);
 
 #endif /* AST_EXPR_H */

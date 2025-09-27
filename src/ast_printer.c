@@ -50,12 +50,7 @@ static void print (const Node *node) {
     print(node -> u.as_binary.right);
     printf(")");
     break;
-  case ND_ASSIGN:
-    printf("(%s = ", node -> u.as_assign.name);
-    print(node -> u.as_assign.value);
-    printf(")");
-    break;
-  case ND_BLOCK:
+    case ND_BLOCK:
     printf("{ ");
 
     for (size_t i = 0; i < node -> u.as_block.count; i++){
@@ -65,6 +60,15 @@ static void print (const Node *node) {
 
     printf(" }");
     break;
+    case ND_ASSIGN:
+      printf("(%s = ", node -> u.as_assign.name);
+      print(node -> u.as_assign.value);
+      printf(")");
+      break;
+    case ND_EXPR:
+      print(node -> u.as_expr.expr);
+      printf(";");
+      break;
   }
 }
 
@@ -105,16 +109,20 @@ static void print_pretty(const Node *node, int depth) {
       print_pretty(node -> u.as_binary.left, depth + 2);
       print_pretty(node -> u.as_binary.right, depth + 2);
       break;
-    case ND_ASSIGN:
-      printf("Assign(%s)\n", node -> u.as_assign.name);
-      print_pretty(node -> u.as_assign.value, depth + 2);
-      break;
-    case ND_BLOCK:
+      case ND_BLOCK:
       printf("Block\n");
       for (size_t i = 0; i < node -> u.as_block.count; i++) {
         print_pretty(node -> u.as_block.stmts[i], depth + 2);
       }
       break;
+      case ND_ASSIGN:
+        printf("Assign(%s)\n", node -> u.as_assign.name);
+        print_pretty(node -> u.as_assign.value, depth + 2);
+        break;
+      case ND_EXPR:
+        printf("Expression\n");
+        print_pretty(node -> u.as_expr.expr, depth + 2);
+        break;
   }
 }
 

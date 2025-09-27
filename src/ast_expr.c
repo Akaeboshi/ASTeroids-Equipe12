@@ -77,3 +77,9 @@ Node *ast_assign(const char *name, Node *value) {
   node -> u.as_assign.value = value;
   return node;
 }
+
+Node *ast_expr(Node *expr) {
+  Node *node = new_node(ND_EXPR);
+  node -> u.as_expr.expr = expr;
+  return node;
+}

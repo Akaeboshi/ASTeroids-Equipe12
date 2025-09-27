@@ -21,16 +21,19 @@ void ast_free(Node *node) {
       ast_free(node -> u.as_binary.left);
       ast_free(node -> u.as_binary.right);
       break;
-    case ND_ASSIGN:
-      free(node -> u.as_assign.name);
-      ast_free(node -> u.as_assign.value);
-      break;
-    case ND_BLOCK:
+      case ND_BLOCK:
       for (size_t i = 0; i < node -> u.as_block.count; i++) {
         ast_free(node -> u.as_block.stmts[i]);
       }
       free(node -> u.as_block.stmts);
       break;
+      case ND_ASSIGN:
+        free(node -> u.as_assign.name);
+        ast_free(node -> u.as_assign.value);
+        break;
+      case ND_EXPR:
+        ast_free(node -> u.as_expr.expr);
+        break;
   }
 
   free(node);
