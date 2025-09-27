@@ -70,3 +70,10 @@ void ast_block_add_stmt(Node *block, Node *stmt) {
 
   block -> u.as_block.stmts[block -> u.as_block.count++] = stmt;
 }
+
+Node *ast_assign(const char *name, Node *value) {
+  Node *node = new_node(ND_ASSIGN);
+  node -> u.as_assign.name = xstrdup(name);
+  node -> u.as_assign.value = value;
+  return node;
+}

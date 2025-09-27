@@ -50,6 +50,11 @@ static void print (const Node *node) {
     print(node -> u.as_binary.right);
     printf(")");
     break;
+  case ND_ASSIGN:
+    printf("(%s = ", node -> u.as_assign.name);
+    print(node -> u.as_assign.value);
+    printf(")");
+    break;
   case ND_BLOCK:
     printf("{ ");
 
@@ -99,6 +104,10 @@ static void print_pretty(const Node *node, int depth) {
       printf("Binary(%s)\n", binop_to_str(node -> u.as_binary.op));
       print_pretty(node -> u.as_binary.left, depth + 2);
       print_pretty(node -> u.as_binary.right, depth + 2);
+      break;
+    case ND_ASSIGN:
+      printf("Assign(%s)\n", node -> u.as_assign.name);
+      print_pretty(node -> u.as_assign.value, depth + 2);
       break;
     case ND_BLOCK:
       printf("Block\n");

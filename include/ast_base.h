@@ -11,6 +11,7 @@ typedef enum {
   ND_IDENT,     // identificador (nome de variável)
   ND_UNARY,     // expressão unária (-, !)
   ND_BINARY,    // expressão binária (+, -, *, /)
+  ND_ASSIGN,    // atribuição (identificador = expr)
   ND_BLOCK,     // bloco de código ({ stmt* })
 } NodeKind;
 
@@ -38,6 +39,7 @@ struct Node {
     struct { char *name; } as_ident;
     struct { UnOp op; Node *expr; } as_unary;
     struct { BinOp op; Node *left; Node *right; } as_binary;
+    struct { char *name; Node *value; } as_assign;
     struct { Node **stmts; size_t count; size_t capacity; } as_block;
   } u;
 };
