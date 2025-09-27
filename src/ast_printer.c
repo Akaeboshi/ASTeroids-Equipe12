@@ -50,6 +50,16 @@ static void print (const Node *node) {
     print(node -> u.as_binary.right);
     printf(")");
     break;
+  case ND_BLOCK:
+    printf("{ ");
+
+    for (size_t i = 0; i < node -> u.as_block.count; i++){
+      print(node -> u.as_block.stmts[i]);
+      if (i + 1 < node -> u.as_block.count) printf(" ");
+    }
+
+    printf(" }");
+    break;
   }
 }
 
@@ -89,6 +99,12 @@ static void print_pretty(const Node *node, int depth) {
       printf("Binary(%s)\n", binop_to_str(node -> u.as_binary.op));
       print_pretty(node -> u.as_binary.left, depth + 2);
       print_pretty(node -> u.as_binary.right, depth + 2);
+      break;
+    case ND_BLOCK:
+      printf("Block\n");
+      for (size_t i = 0; i < node -> u.as_block.count; i++) {
+        print_pretty(node -> u.as_block.stmts[i], depth + 2);
+      }
       break;
   }
 }
