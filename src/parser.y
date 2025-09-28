@@ -1,5 +1,7 @@
 
 %{
+#include "ast.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -9,6 +11,7 @@ void yyerror(const char *s);
 
 /* Tipos de valores semânticos possíveis. */
 %union {
+    struct Node* node;
     int intValue;
     double floatValue;
     int boolValue;
@@ -30,40 +33,42 @@ void yyerror(const char *s);
 %left TIMES DIVIDE
 
 /* Associação de tipos semânticos a não-terminais */
-%type <floatValue> Num Primary expr
+%type <node>  Input Line Expr Primary Num
 
-/* símbolo inicial */
-%start input
+/* Símbolo inicial */
+%start Input
 
 %%
 
-input
+Input
     : /* vazio */
-    | input line
+    | Input Line
     ;
 
-line
-    : expr SEMICOLON                      { printf("Resultado: %f\n", $1); }
+Line
+    : Expr SEMICOLON                      { ast_print($1); ast_print_pretty($1); ast_free($1); }
     | SEMICOLON                           { /* linha vazia */ }
     ;
 
-Num:
-      INT_LIT                             { $$ = (double)$1; }
-    | FLOAT_LIT                           { $$ = $1; }
+Expr
+    : Expr PLUS Expr                      { $$ = ast_binary(BIN_ADD, $1, $3); }
+    | Expr MINUS Expr                     { $$ = ast_binary(BIN_SUB, $1, $3); }
+    | Expr TIMES Expr                     { $$ = ast_binary(BIN_MUL, $1, $3); }
+    | Expr DIVIDE Expr                    { $$ = ast_binary(BIN_DIV, $1, $3); }
+    | Primary                             { $$ = $1; }
+    ;
+
+Num
+    : INT_LIT                             { $$ = ast_int($1); }
+    | FLOAT_LIT                           { $$ = ast_float($1); }
+    | BOOL_LIT                            { $$ = ast_bool($1); }
     ;
 
 Primary
-    : LPAREN expr RPAREN                  { $$ = $2; }
+    : LPAREN Expr RPAREN                  { $$ = $2; }
     | Num
     ;
 
-expr
-    : expr PLUS expr                      { $$ = $1 + $3; }
-    | expr MINUS expr                     { $$ = $1 - $3; }
-    | expr TIMES expr                     { $$ = $1 * $3; }
-    | expr DIVIDE expr                    { $$ = $1 / $3; }
-    | Primary                             { $$ = $1; }
-    ;
 
 %%
 
