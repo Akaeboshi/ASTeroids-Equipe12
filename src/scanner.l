@@ -11,6 +11,8 @@ false             { yylval.boolValue = 0; return BOOL_LIT; }
 
 [0-9]+"."[0-9]+   { yylval.floatValue = strtod(yytext, NULL); return FLOAT_LIT; }
 
+[a-zA-Z_][a-zA-Z0-9_]* { yylval.str = strdup(yytext); return IDENT; }
+
 [0-9]+            { yylval.intValue = atoi(yytext); return INT_LIT; }
 
 /* Ignorar espaços em branco, tabulações, quebra de linhas e comentários */
@@ -45,6 +47,19 @@ false             { yylval.boolValue = 0; return BOOL_LIT; }
 /* Símbolos */
 "("               { return LPAREN; }
 ")"               { return RPAREN; }
+"{"               { return LBRACE; }
+"}"               { return RBRACE; }
+";"               { return SEMICOLON;  }
+","               { return COMMA;  }
+
+/* Condicionais */
+
+"if"              { return IF;       }
+"else"            { return ELSE;     }
+"while"           { return WHILE;    }
+"for"             { return FOR;      }
+"function"        { return FUNCTION; }
+"return"          { return RETURN;      }
 
 /* Operadores Lógicos */
 "&&"              { return AND; }
