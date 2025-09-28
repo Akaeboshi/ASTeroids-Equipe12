@@ -8,6 +8,14 @@ static const char *binop_to_str(BinOp op) {
     case BIN_SUB: return "-";
     case BIN_MUL: return "*";
     case BIN_DIV: return "/";
+    case BIN_EQ:  return "==";
+    case BIN_NEQ: return "!=";
+    case BIN_LT:  return "<";
+    case BIN_LE:  return "<=";
+    case BIN_GT:  return ">";
+    case BIN_GE:  return ">=";
+    case BIN_AND: return "&&";
+    case BIN_OR:  return "||";
     default: return "?";
   }
 }

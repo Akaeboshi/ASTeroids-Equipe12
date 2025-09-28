@@ -17,10 +17,23 @@ typedef enum {
 } NodeKind;
 
 typedef enum {
+  /* Aritméticos */
   BIN_ADD,  // +
   BIN_SUB,  // -
   BIN_MUL,  // *
-  BIN_DIV   // /
+  BIN_DIV,  // /
+
+  /* Relacionais */
+  BIN_EQ,   // ==
+  BIN_NEQ,  // !=
+  BIN_LT,   // <
+  BIN_LE,  // <=
+  BIN_GT,   // >
+  BIN_GE,  // >=
+
+  /* Lógicos */
+  BIN_AND,  // &&
+  BIN_OR    // ||
 } BinOp;
 
 typedef enum {
