@@ -2,60 +2,53 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "parser.tab.h"   /* tokens e yylval do Bison */
-%x COMMENT
 %}
 
+%option noinput nounput
+%x COMMENT
+
 %%
-true              { yylval.boolValue = 1; return BOOL_LIT; }
-false             { yylval.boolValue = 0; return BOOL_LIT; }
 
-[0-9]+"."[0-9]+   { yylval.floatValue = strtod(yytext, NULL); return FLOAT_LIT; }
+true                { yylval.boolValue = 1; return BOOL_LIT; /* bool true */ }
+false               { yylval.boolValue = 0; return BOOL_LIT; /* bool false */}
 
-[0-9]+            { yylval.intValue = atoi(yytext); return INT_LIT; }
-
-/* Ignorar espaços em branco, tabulações, quebra de linhas e comentários */
+[0-9]+"."[0-9]+     { yylval.floatValue = strtod(yytext, NULL); return FLOAT_LIT; /* float */}
+[0-9]+              { yylval.intValue = atoi(yytext); return INT_LIT;             /* int   */}
 
 [ \t\n]+            { /* ignora espaços e tabulações e quebra de linhas*/ }
 
-"//".* { /* Ignora comentários de linha única (estilo C++) */ }
-
-"/*"              { BEGIN(COMMENT); } /* Entra no modo de comentário multilinha */
-<COMMENT>"*/"     { BEGIN(INITIAL); } /* Sai do modo de comentário */
-<COMMENT>.|\n    { /* Ignora todo o conteúdo dentro do comentário */ }
-<COMMENT><<EOF>>  { 
+"//".*              {                   /* Ignora comentários de linha única (estilo C++) */ }
+"/*"                { BEGIN(COMMENT);   /* Entra no modo de comentário multilinha */         }
+<COMMENT>"*/"       { BEGIN(INITIAL);   /* Sai do modo de comentário */                      }
+<COMMENT>.|\n       {                   /* Ignora todo o conteúdo dentro do comentário */    }
+<COMMENT><<EOF>>    {
                       fprintf(stderr, "Erro: Comentário multilinha não foi fechado.\\n");
                       yyterminate(); /* Aborta o scanner por erro grave */
-                  }
+                    }
 
-/* Operadores Aritméticos */
-"+"               { return PLUS; }
-"-"               { return MINUS; }
-"*"               { return TIMES; }
-"/"               { return DIVIDE; }
+"+"                 { return PLUS;   /* operador aritmético de adição */        }
+"-"                 { return MINUS;  /* operador aritmético de subtração */     }
+"*"                 { return TIMES;  /* operador aritmético de multiplicação */ }
+"/"                 { return DIVIDE; /* operador aritmético de divisão */       }
 
-/* Operadores Relacionais */
+"=="                { return EQ;  /* operador relacional de igualdade */        }
+"!="                { return NEQ; /* operador relacional de desigualdade */     }
+"<"                 { return LT;  /* operador relacional de menor que */        }
+">"                 { return GT;  /* operador relacional de maior que */        }
+"<="                { return LE;  /* operador relacional de menor ou igual a */ }
+">="                { return GE;  /* operador relacional de maior ou igual a */ }
 
-"=="              { return EQ; }      
-"!="              { return NEQ; }     
-"<"               { return LT; }      
-">"               { return GT; }      
-"<="              { return LE; }      
-">="              { return GE; }    
+"("                 { return LPAREN; /* parêntese esquerdo */ }
+")"                 { return RPAREN; /* parêntese direito */  }
 
-/* Símbolos */
-"("               { return LPAREN; }
-")"               { return RPAREN; }
+"&&"                { return AND; /* operador lógico E */    }
+"||"                { return OR;  /* operador lógico OU */   }
+"!"                 { return NOT; /* operador lógico NÃO */  }
 
-/* Operadores Lógicos */
-"&&"              { return AND; }
-"||"              { return OR; }
-"!"               { return NOT; }
+"="                 { return ASSIGN; /* operador de atribuição */     }
+";"                 { return SEMICOLON; /* terminador de expressão */ }
 
-/* Operador de atribuição  */
-"="               { return ASSIGN; }
-
-
-.                 { fprintf(stderr, "Caractere não reconhecido: %s\n", yytext); }
+.                   { fprintf(stderr, "Caractere não reconhecido: %s\n", yytext); }
 
 %%
 
