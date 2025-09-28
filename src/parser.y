@@ -11,14 +11,16 @@ void yyerror(const char *s);
 %union {
     int intValue;
     double floatValue;
+    int boolValue;
 }
 
 /* Tokens que carregam valor semântico */
 %token <intValue> INT_LIT
 %token <floatValue> FLOAT_LIT
+%token <boolValue> BOOL_LIT
 
 /* Tokens sem valor semântico */
-%token PLUS MINUS TIMES DIVIDE LPAREN RPAREN 
+%token PLUS MINUS TIMES DIVIDE LPAREN RPAREN
 
 /* Tokens dos operadores relacionais */
 %token EQ NEQ LT GT LE GE
