@@ -45,7 +45,8 @@ false               { yylval.boolValue = 0; return BOOL_LIT; /* bool false */}
 "||"                { return OR;  /* operador lógico OU */   }
 "!"                 { return NOT; /* operador lógico NÃO */  }
 
-"="                 { return ASSIGN; /* operador de atribuição */ }
+"="                 { return ASSIGN; /* operador de atribuição */     }
+";"                 { return SEMICOLON; /* terminador de expressão */ }
 
 .                   { fprintf(stderr, "Caractere não reconhecido: %s\n", yytext); }
 

@@ -14,20 +14,16 @@ void yyerror(const char *s);
     int boolValue;
 }
 
-/* Tokens que carregam valor semântico */
+/* Tokens com valor semântico */
 %token <intValue> INT_LIT
 %token <floatValue> FLOAT_LIT
 %token <boolValue> BOOL_LIT
 
 /* Tokens sem valor semântico */
-%token PLUS MINUS TIMES DIVIDE LPAREN RPAREN
-
-/* Tokens dos operadores relacionais */
-%token EQ NEQ LT GT LE GE
-
-/* Tokens dos operadores lógicos e de atribuição */
-%token AND OR NOT ASSIGN
-
+%token PLUS MINUS TIMES DIVIDE LPAREN RPAREN    /* Tokens de símbolos fixos */
+%token EQ NEQ LT GT LE GE                       /* Tokens dos operadores relacionais */
+%token AND OR NOT                               /* Tokens dos operadores lógicos */
+%token ASSIGN SEMICOLON                         /* Tokens de atribuição e terminador */
 
 /* Regras de precedência e associatividade */
 %left PLUS MINUS
@@ -41,9 +37,14 @@ void yyerror(const char *s);
 
 %%
 
-input:
-      /* vazio */
-    | input expr
+input
+    : /* vazio */
+    | input line
+    ;
+
+line
+    : expr SEMICOLON                      { printf("Resultado: %f\n", $1); }
+    | SEMICOLON                           { /* linha vazia */ }
     ;
 
 Num:
@@ -51,13 +52,13 @@ Num:
     | FLOAT_LIT                           { $$ = $1; }
     ;
 
-Primary:
-      LPAREN expr RPAREN                  { $$ = $2; }
+Primary
+    : LPAREN expr RPAREN                  { $$ = $2; }
     | Num
     ;
 
-expr:
-      expr PLUS expr                      { $$ = $1 + $3; }
+expr
+    : expr PLUS expr                      { $$ = $1 + $3; }
     | expr MINUS expr                     { $$ = $1 - $3; }
     | expr TIMES expr                     { $$ = $1 * $3; }
     | expr DIVIDE expr                    { $$ = $1 / $3; }
