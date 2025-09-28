@@ -29,11 +29,13 @@ void yyerror(const char *s);
 %token ASSIGN SEMICOLON                         /* Tokens de atribuição e terminador */
 
 /* Regras de precedência e associatividade */
+%left EQ NEQ
+%left LT LE GT GE
 %left PLUS MINUS
 %left TIMES DIVIDE
 
 /* Associação de tipos semânticos a não-terminais */
-%type <node>  Input Line Expr Primary Num
+%type <node>  Input Line Expr RelExpr AddExpr MulExpr Primary Num
 
 /* Símbolo inicial */
 %start Input
@@ -51,11 +53,29 @@ Line
     ;
 
 Expr
-    : Expr PLUS Expr                      { $$ = ast_binary(BIN_ADD, $1, $3); }
-    | Expr MINUS Expr                     { $$ = ast_binary(BIN_SUB, $1, $3); }
-    | Expr TIMES Expr                     { $$ = ast_binary(BIN_MUL, $1, $3); }
-    | Expr DIVIDE Expr                    { $$ = ast_binary(BIN_DIV, $1, $3); }
-    | Primary                             { $$ = $1; }
+    : RelExpr                             { $$ = $1; }
+    ;
+
+RelExpr
+    : AddExpr                             { $$ = $1; }
+    | RelExpr EQ AddExpr                  { $$ = ast_binary(BIN_EQ, $1, $3); }
+    | RelExpr NEQ AddExpr                 { $$ = ast_binary(BIN_NEQ, $1, $3); }
+    | RelExpr LT AddExpr                  { $$ = ast_binary(BIN_LT, $1, $3); }
+    | RelExpr LE AddExpr                  { $$ = ast_binary(BIN_LE, $1, $3); }
+    | RelExpr GT AddExpr                  { $$ = ast_binary(BIN_GT, $1, $3); }
+    | RelExpr GE AddExpr                  { $$ = ast_binary(BIN_GE, $1, $3); }
+    ;
+
+AddExpr
+    : MulExpr                             { $$ = $1; }
+    | AddExpr PLUS MulExpr                { $$ = ast_binary(BIN_ADD, $1, $3); }
+    | AddExpr MINUS MulExpr               { $$ = ast_binary(BIN_SUB, $1, $3); }
+    ;
+
+MulExpr
+    : Primary                             { $$ = $1; }
+    | MulExpr TIMES Primary               { $$ = ast_binary(BIN_MUL, $1, $3); }
+    | MulExpr DIVIDE Primary              { $$ = ast_binary(BIN_DIV, $1, $3); }
     ;
 
 Num
@@ -68,7 +88,6 @@ Primary
     : LPAREN Expr RPAREN                  { $$ = $2; }
     | Num
     ;
-
 
 %%
 
