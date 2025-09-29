@@ -1,6 +1,7 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "parser.tab.h"   /* tokens e yylval do Bison */
 %}
 
@@ -9,56 +10,65 @@
 
 %%
 
-true                    { yylval.boolValue = 1; return BOOL_LIT; /* bool true */ }
-false                   { yylval.boolValue = 0; return BOOL_LIT; /* bool false */}
+true                    { yylval.boolValue = 1; return BOOL_LIT; }
+false                   { yylval.boolValue = 0; return BOOL_LIT; }
 
-[0-9]+"."[0-9]+         { yylval.floatValue = strtod(yytext, NULL); return FLOAT_LIT; /* float */}
-[0-9]+                  { yylval.intValue = atoi(yytext); return INT_LIT;             /* int   */}
+[0-9]+"."[0-9]+         { yylval.floatValue = strtod(yytext, NULL); return FLOAT_LIT; }
+[0-9]+                  { yylval.intValue = atoi(yytext); return INT_LIT; }
 
-"if"                    { return IF;       /* Palavras-chave */ }
-"else"                  { return ELSE;                          }
-"while"                 { return WHILE;                         }
-"for"                   { return FOR;                           }
-"function"              { return FUNCTION;                      }
-"return"                { return RETURN;                        }
-
-[a-zA-Z_][a-zA-Z0-9_]*  { yylval.str = strdup(yytext); return IDENT;  /* identificador */ }
-
-[ \t\n]+                { /* ignora espaços e tabulações e quebra de linhas*/ }
-
-"//".*                  {                   /* Ignora comentários de linha única (estilo C++) */ }
-"/*"                    { BEGIN(COMMENT);   /* Entra no modo de comentário multilinha */         }
-<COMMENT>"*/"           { BEGIN(INITIAL);   /* Sai do modo de comentário */                      }
-<COMMENT>.|\n           {                   /* Ignora todo o conteúdo dentro do comentário */    }
-<COMMENT><<EOF>>        {
-                          fprintf(stderr, "Erro: Comentário multilinha não foi fechado.\\n");
-                          yyterminate(); /* Aborta o scanner por erro grave */
+\"([^\\\n]|(\\.))*\"    {
+                          /* Remove aspas e guarda string */
+                          size_t len = yyleng - 2;
+                          char *str = (char*)malloc(len + 1);
+                          strncpy(str, yytext + 1, len);
+                          str[len] = '\0';
+                          yylval.str = str;
+                          return STRING_LIT;
                         }
 
-"+"                     { return PLUS;   /* operador aritmético de adição */        }
-"-"                     { return MINUS;  /* operador aritmético de subtração */     }
-"*"                     { return TIMES;  /* operador aritmético de multiplicação */ }
-"/"                     { return DIVIDE; /* operador aritmético de divisão */       }
+"if"                    { return IF; }
+"else"                  { return ELSE; }
+"while"                 { return WHILE; }
+"for"                   { return FOR; }
+"function"              { return FUNCTION; }
+"return"                { return RETURN; }
 
-"=="                    { return EQ;  /* operador relacional de igualdade */        }
-"!="                    { return NEQ; /* operador relacional de desigualdade */    }
-"<"                     { return LT;  /* operador relacional de menor que */        }
-">"                     { return GT;  /* operador relacional de maior que */        }
-"<="                    { return LE;  /* operador relacional de menor ou igual a */ }
-">="                    { return GE;  /* operador relacional de maior ou igual a */ }
+[a-zA-Z_][a-zA-Z0-9_]*  { yylval.str = strdup(yytext); return IDENT; }
 
+[ \t\n]+                { /* ignora espaços, tabs e quebras de linha */ }
 
-"("                     { return LPAREN;    /* parêntese esquerdo */  }
-")"                     { return RPAREN;    /* parêntese direito */   }
-"{"                     { return LBRACE;    /* chave esquerda */      }
-"}"                     { return RBRACE;    /* chave direita */       }
-","                     { return COMMA;     /* vírgula */             }
-";"                     { return SEMICOLON; /* ponto e vírgula */     }
+"//".*                  { /* ignora comentários de linha única */ }
+"/*"                    { BEGIN(COMMENT); }
+<COMMENT>"*/"           { BEGIN(INITIAL); }
+<COMMENT>.|\n           { /* ignora conteúdo de comentário */ }
+<COMMENT><<EOF>>        {
+                          fprintf(stderr, "Erro: Comentário multilinha não foi fechado.\n");
+                          yyterminate();
+                        }
 
-"&&"                    { return AND;    /* operador lógico AND */    }
-"||"                    { return OR;     /* operador lógico OR */     }
-"!"                     { return NOT;    /* operador lógico NOT */    }
-"="                     { return ASSIGN; /* operador de atribuição */ }
+"+"                     { return PLUS; }
+"-"                     { return MINUS; }
+"*"                     { return TIMES; }
+"/"                     { return DIVIDE; }
+
+"=="                    { return EQ; }
+"!="                    { return NEQ; }
+"<"                     { return LT; }
+">"                     { return GT; }
+"<="                    { return LE; }
+">="                    { return GE; }
+
+"("                     { return LPAREN; }
+")"                     { return RPAREN; }
+"{"                     { return LBRACE; }
+"}"                     { return RBRACE; }
+","                     { return COMMA; }
+";"                     { return SEMICOLON; }
+
+"&&"                    { return AND; }
+"||"                    { return OR; }
+"!"                     { return NOT; }
+"="                     { return ASSIGN; }
 
 .                       { fprintf(stderr, "Caractere não reconhecido: %s\n", yytext); }
 
