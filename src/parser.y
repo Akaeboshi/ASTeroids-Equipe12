@@ -14,28 +14,35 @@ void yyerror(const char *s);
     struct Node* node;
     int intValue;
     double floatValue;
+    char *str;
     int boolValue;
 }
 
 /* Tokens com valor semântico */
 %token <intValue> INT_LIT
 %token <floatValue> FLOAT_LIT
-%token <boolValue> BOOL_LIT
 
 /* Tokens sem valor semântico */
-%token PLUS MINUS TIMES DIVIDE LPAREN RPAREN    /* Tokens de símbolos fixos */
-%token EQ NEQ LT GT LE GE                       /* Tokens dos operadores relacionais */
-%token AND OR NOT                               /* Tokens dos operadores lógicos */
-%token ASSIGN SEMICOLON                         /* Tokens de atribuição e terminador */
+%token PLUS MINUS TIMES DIVIDE LPAREN RPAREN
+
+/* Tokens dos operadores relacionais */
+%token EQ NEQ LT GT LE GE
+
+/* Tokens dos operadores lógicos e de atribuição */
+%token AND OR NOT ASSIGN
+
 
 /* Regras de precedência e associatividade */
-%left EQ NEQ
-%left LT LE GT GE
+%left OR
+%left AND
+%left LT GT LE GE
 %left PLUS MINUS
 %left TIMES DIVIDE
 
 /* Associação de tipos semânticos a não-terminais */
-%type <node>  Input Line Expr RelExpr AddExpr MulExpr Primary Num
+%type <floatValue> expr arithmetic_expr
+%type <node>  Input Line Expr RelExpr AddExpr MulExpr Primary
+%type <boolValue> bool_Num
 
 /* Símbolo inicial */
 %start Input
