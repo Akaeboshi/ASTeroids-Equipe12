@@ -9,50 +9,58 @@
 
 %%
 
-true                { yylval.boolValue = 1; return BOOL_LIT; /* bool true */ }
-false               { yylval.boolValue = 0; return BOOL_LIT; /* bool false */}
+true                    { yylval.boolValue = 1; return BOOL_LIT; /* bool true */ }
+false                   { yylval.boolValue = 0; return BOOL_LIT; /* bool false */}
 
-[a-zA-Z_][a-zA-Z0-9_]* { yylval.str = strdup(yytext); return IDENT; }
+[0-9]+"."[0-9]+         { yylval.floatValue = strtod(yytext, NULL); return FLOAT_LIT; /* float */}
+[0-9]+                  { yylval.intValue = atoi(yytext); return INT_LIT;             /* int   */}
 
-[0-9]+"."[0-9]+     { yylval.floatValue = strtod(yytext, NULL); return FLOAT_LIT; /* float */}
-[0-9]+              { yylval.intValue = atoi(yytext); return INT_LIT;             /* int   */}
+"if"                    { return IF;       /* Palavras-chave */ }
+"else"                  { return ELSE;                          }
+"while"                 { return WHILE;                         }
+"for"                   { return FOR;                           }
+"function"              { return FUNCTION;                      }
+"return"                { return RETURN;                        }
 
-[ \t\n]+            { /* ignora espaços e tabulações e quebra de linhas*/ }
+[a-zA-Z_][a-zA-Z0-9_]*  { yylval.str = strdup(yytext); return IDENT;  /* identificador */ }
 
-"//".*              {                   /* Ignora comentários de linha única (estilo C++) */ }
-"/*"                { BEGIN(COMMENT);   /* Entra no modo de comentário multilinha */         }
-<COMMENT>"*/"       { BEGIN(INITIAL);   /* Sai do modo de comentário */                      }
-<COMMENT>.|\n       {                   /* Ignora todo o conteúdo dentro do comentário */    }
-<COMMENT><<EOF>>    {
-                      fprintf(stderr, "Erro: Comentário multilinha não foi fechado.\\n");
-                      yyterminate(); /* Aborta o scanner por erro grave */
-                    }
+[ \t\n]+                { /* ignora espaços e tabulações e quebra de linhas*/ }
 
-"+"                 { return PLUS;   /* operador aritmético de adição */        }
-"-"                 { return MINUS;  /* operador aritmético de subtração */     }
-"*"                 { return TIMES;  /* operador aritmético de multiplicação */ }
-"/"                 { return DIVIDE; /* operador aritmético de divisão */       }
+"//".*                  {                   /* Ignora comentários de linha única (estilo C++) */ }
+"/*"                    { BEGIN(COMMENT);   /* Entra no modo de comentário multilinha */         }
+<COMMENT>"*/"           { BEGIN(INITIAL);   /* Sai do modo de comentário */                      }
+<COMMENT>.|\n           {                   /* Ignora todo o conteúdo dentro do comentário */    }
+<COMMENT><<EOF>>        {
+                          fprintf(stderr, "Erro: Comentário multilinha não foi fechado.\\n");
+                          yyterminate(); /* Aborta o scanner por erro grave */
+                        }
 
-"=="              { return EQ; }
-"!="              { return NEQ; }
-"<"               { return LT; }
-">"               { return GT; }
-"<="              { return LE; }
-">="              { return GE; }
+"+"                     { return PLUS;   /* operador aritmético de adição */        }
+"-"                     { return MINUS;  /* operador aritmético de subtração */     }
+"*"                     { return TIMES;  /* operador aritmético de multiplicação */ }
+"/"                     { return DIVIDE; /* operador aritmético de divisão */       }
 
-/* Símbolos */
-"("               { return LPAREN; }
-")"               { return RPAREN; }
+"=="                    { return EQ;  /* operador relacional de igualdade */        }
+"!="                    { return NEQ; /* operador relacional de desigualdade */    }
+"<"                     { return LT;  /* operador relacional de menor que */        }
+">"                     { return GT;  /* operador relacional de maior que */        }
+"<="                    { return LE;  /* operador relacional de menor ou igual a */ }
+">="                    { return GE;  /* operador relacional de maior ou igual a */ }
 
-/* Operadores Lógicos */
-"&&"              { return AND; }
-"||"              { return OR; }
-"!"               { return NOT; }
 
-"="                 { return ASSIGN; /* operador de atribuição */     }
-";"                 { return SEMICOLON; /* terminador de expressão */ }
+"("                     { return LPAREN;    /* parêntese esquerdo */  }
+")"                     { return RPAREN;    /* parêntese direito */   }
+"{"                     { return LBRACE;    /* chave esquerda */      }
+"}"                     { return RBRACE;    /* chave direita */       }
+","                     { return COMMA;     /* vírgula */             }
+";"                     { return SEMICOLON; /* ponto e vírgula */     }
 
-.                   { fprintf(stderr, "Caractere não reconhecido: %s\n", yytext); }
+"&&"                    { return AND;    /* operador lógico AND */    }
+"||"                    { return OR;     /* operador lógico OR */     }
+"!"                     { return NOT;    /* operador lógico NOT */    }
+"="                     { return ASSIGN; /* operador de atribuição */ }
+
+.                       { fprintf(stderr, "Caractere não reconhecido: %s\n", yytext); }
 
 %%
 
