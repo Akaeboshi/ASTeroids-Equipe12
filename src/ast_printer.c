@@ -45,6 +45,9 @@ static void print (const Node *node) {
   case ND_IDENT:
     printf("%s", node -> u.as_ident.name);
     break;
+  case ND_STRING:
+    printf("%s", node -> u.as_string.value);
+    break;
   case ND_UNARY:
     printf("(");
     printf("%s", unop_to_str(node -> u.as_unary.op));
@@ -107,6 +110,9 @@ static void print_pretty(const Node *node, int depth) {
       break;
     case ND_IDENT:
       printf("Ident(%s)\n", node -> u.as_ident.name);
+      break;
+    case ND_STRING:
+      printf("String(%s)\n", node -> u.as_string.value);
       break;
     case ND_UNARY:
       printf("Unary(%s)\n", unop_to_str(node -> u.as_unary.op));

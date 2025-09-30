@@ -7,6 +7,7 @@ Node *ast_int(long value);
 Node *ast_float(double value);
 Node *ast_bool(bool value);
 Node *ast_ident(const char *name);
+Node *ast_string(const char *value);
 Node *ast_unary(UnOp op, Node *expr);
 Node *ast_binary(BinOp op, Node *left, Node *right);
 Node *ast_block(void);

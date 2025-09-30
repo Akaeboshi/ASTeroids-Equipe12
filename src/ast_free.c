@@ -14,6 +14,9 @@ void ast_free(Node *node) {
     case ND_IDENT:
       free(node -> u.as_ident.name);
       break;
+    case ND_STRING:
+      free(node -> u.as_string.value);
+      break;
     case ND_UNARY:
       ast_free(node -> u.as_unary.expr);
       break;

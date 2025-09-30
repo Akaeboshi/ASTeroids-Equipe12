@@ -28,6 +28,12 @@ Node *ast_ident(const char *name) {
   return node;
 }
 
+Node *ast_string(const char *value) {
+  Node *node = new_node(ND_STRING);
+  node -> u.as_string.value = xstrdup(value);
+  return node;
+}
+
 Node *ast_unary(UnOp op, Node *expr) {
   Node *node = new_node(ND_UNARY);
   node -> u.as_unary.op = op;
