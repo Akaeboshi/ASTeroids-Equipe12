@@ -1,0 +1,20 @@
+// testes básicos de tokens
+intVar = 123;
+floatVar = 3.1415;
+flag = true;
+flag2 = false;
+
+"hello world";
+"line\\nbreak";
+"quote: \\\" inside";
+name = _ident123;
+if (x < 10) { y = y + 1; } else { y = 0; }
+
+/* comentário
+   multilinha
+   com nova linha
+*/
+
+for (i = 0; i < 5; i = i + 1) {
+    sum = sum + i;
+}

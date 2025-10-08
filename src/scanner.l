@@ -1,76 +1,153 @@
 %{
+/*
+  scanner.l - scanner Flex melhorado
+  - %option yylineno para controle automático de linhas (yylineno)
+  - variavel global yycolumn para coluna atual (inicial 1)
+  - unescape de strings (\" \\n \\t \\r \\\\ etc.)
+  - atualização consistente de coluna (yycolumn += yyleng)
+  - mensagens de erro léxico com linha/coluna
+  - comentários (// e /* */) com atualização de linha
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "parser.tab.h"   /* tokens e yylval do Bison */
+#include "parser.tab.h"   /* tokens e yylval do Bison (gerado por bison -d) */
+
+/* coluna atual (mantida manualmente) */
+int yycolumn = 1;
+
+/* Função simples para transformar sequências de escape em caracteres reais.
+   Recebe uma string *sem* aspas (ex: entrada: hello\nworld -> processa \n -> newline).
+   Retorna malloc()'ed string (caller must free). */
+static char *unescape_string(const char *src) {
+    size_t sl = strlen(src);
+    char *out = malloc(sl + 1);
+    if (!out) return NULL;
+    size_t i = 0, j = 0;
+    while (src[i]) {
+        if (src[i] == '\\') {
+            i++;
+            if (!src[i]) break;
+            switch (src[i]) {
+                case 'n': out[j++] = '\n'; break;
+                case 't': out[j++] = '\t'; break;
+                case 'r': out[j++] = '\r'; break;
+                case '\\': out[j++] = '\\'; break;
+                case '"': out[j++] = '"'; break;
+                case '\'': out[j++] = '\''; break;
+                default: out[j++] = src[i]; break;
+            }
+            i++;
+        } else {
+            out[j++] = src[i++];
+        }
+    }
+    out[j] = '\0';
+    return out;
+}
 %}
 
-%option noinput nounput
+/* opções do flex */
+%option noinput nounput yylineno
 %x COMMENT
 
 %%
 
-true                    { yylval.boolValue = 1; return BOOL_LIT; }
-false                   { yylval.boolValue = 0; return BOOL_LIT; }
+/* ---------- Literais e palavras-chave ---------- */
 
-[0-9]+"."[0-9]+         { yylval.floatValue = strtod(yytext, NULL); return FLOAT_LIT; }
-[0-9]+                  { yylval.intValue = atoi(yytext); return INT_LIT; }
+/* booleanos */
+"true"                  { yylval.boolValue = 1; yycolumn += yyleng; return BOOL_LIT; }
+"false"                 { yylval.boolValue = 0; yycolumn += yyleng; return BOOL_LIT; }
 
+/* float (colocado antes de int) - aceita ex: 3.14 e 1.2e-3 */
+[0-9]+\.[0-9]+([eE][-+]?[0-9]+)?   { yylval.floatValue = strtod(yytext, NULL); yycolumn += yyleng; return FLOAT_LIT; }
+
+/* int */
+[0-9]+                  { yylval.intValue = atoi(yytext); yycolumn += yyleng; return INT_LIT; }
+
+/* string com escapes - aceita \" \\n \\t etc.
+   yytext inclui as aspas, por isso removemos a primeira e última char. */
 \"([^\\\n]|(\\.))*\"    {
-                          /* Remove aspas e guarda string */
-                          size_t len = yyleng - 2;
-                          char *str = (char*)malloc(len + 1);
-                          strncpy(str, yytext + 1, len);
-                          str[len] = '\0';
-                          yylval.str = str;
+                          size_t raw_len = (yyleng >= 2) ? yyleng - 2 : 0;
+                          char *raw = malloc(raw_len + 1);
+                          if (!raw) { fprintf(stderr, "Erro de memória\n"); exit(1); }
+                          if (raw_len) strncpy(raw, yytext + 1, raw_len);
+                          raw[raw_len] = '\0';
+                          char *un = unescape_string(raw);
+                          free(raw);
+                          yylval.str = un;   /* quem consumir deve free() */
+                          yycolumn += yyleng;
                           return STRING_LIT;
                         }
 
-"if"                    { return IF; }
-"else"                  { return ELSE; }
-"while"                 { return WHILE; }
-"for"                   { return FOR; }
-"function"              { return FUNCTION; }
-"return"                { return RETURN; }
+/* ---------- Palavras-chave (mantidas explicitamente) ---------- */
+"if"                    { yycolumn += yyleng; return IF; }
+"else"                  { yycolumn += yyleng; return ELSE; }
+"while"                 { yycolumn += yyleng; return WHILE; }
+"for"                   { yycolumn += yyleng; return FOR; }
+"function"              { yycolumn += yyleng; return FUNCTION; }
+"return"                { yycolumn += yyleng; return RETURN; }
 
-[a-zA-Z_][a-zA-Z0-9_]*  { yylval.str = strdup(yytext); return IDENT; }
+/* ---------- Identificador (fallback para palavras-chave) ---------- */
+/* Note: regras de palavras-chave vêm antes, então identificadores longos não são 'quebrados'. */
+[a-zA-Z_][a-zA-Z0-9_]*  { yylval.str = strdup(yytext); yycolumn += yyleng; return IDENT; }
 
-[ \t\n]+                { /* ignora espaços, tabs e quebras de linha */ }
+/* ---------- Espaços e quebras de linha (atualizam coluna/linha) ---------- */
+[\t ]+                  { yycolumn += yyleng; /* ignora tabs/espacos */ }
+\r\n                    { yylineno++; yycolumn = 1; }
+\n                      { yylineno++; yycolumn = 1; }
+\r                      { yylineno++; yycolumn = 1; }
 
-"//".*                  { /* ignora comentários de linha única */ }
-"/*"                    { BEGIN(COMMENT); }
-<COMMENT>"*/"           { BEGIN(INITIAL); }
-<COMMENT>.|\n           { /* ignora conteúdo de comentário */ }
+/* ---------- Comentários ---------- */
+/* comentário linha única (consume até newline, coluna avança pelo comprimento) */
+"//"[^\n]*              { yycolumn += yyleng; /* ignora */ }
+
+/* comentário multilinha - entra em estado COMMENT */
+"/*"                    { yycolumn += yyleng; BEGIN(COMMENT); }
+
+/* dentro de comentário multilinha: */
+<COMMENT>"*/"           { yycolumn += yyleng; BEGIN(INITIAL); }
+<COMMENT>\r\n           { yylineno++; yycolumn = 1; }
+<COMMENT>\n             { yylineno++; yycolumn = 1; }
+<COMMENT>.              { yycolumn += yyleng; /* qualquer outro caractere dentro do comentário */ }
 <COMMENT><<EOF>>        {
-                          fprintf(stderr, "Erro: Comentário multilinha não foi fechado.\n");
-                          yyterminate();
+                          fprintf(stderr, "Erro léxico: comentário multilinha não fechado (linha %d)\n", yylineno);
+                          exit(1);
                         }
 
-"+"                     { return PLUS; }
-"-"                     { return MINUS; }
-"*"                     { return TIMES; }
-"/"                     { return DIVIDE; }
+/* ---------- Operadores compostos/simbolos (mais específicos antes) ---------- */
+"=="                    { yycolumn += yyleng; return EQ; }
+"!="                    { yycolumn += yyleng; return NEQ; }
+"<="                    { yycolumn += yyleng; return LE; }
+">="                    { yycolumn += yyleng; return GE; }
 
-"=="                    { return EQ; }
-"!="                    { return NEQ; }
-"<"                     { return LT; }
-">"                     { return GT; }
-"<="                    { return LE; }
-">="                    { return GE; }
+"&&"                    { yycolumn += yyleng; return AND; }
+"||"                    { yycolumn += yyleng; return OR; }
 
-"("                     { return LPAREN; }
-")"                     { return RPAREN; }
-"{"                     { return LBRACE; }
-"}"                     { return RBRACE; }
-","                     { return COMMA; }
-";"                     { return SEMICOLON; }
+/* operadores simples */
+"<"                     { yycolumn += yyleng; return LT; }
+">"                     { yycolumn += yyleng; return GT; }
+"+"                     { yycolumn += yyleng; return PLUS; }
+"-"                     { yycolumn += yyleng; return MINUS; }
+"*"                     { yycolumn += yyleng; return TIMES; }
+"/"                     { yycolumn += yyleng; return DIVIDE; }
+"!"                     { yycolumn += yyleng; return NOT; }
+"="                     { yycolumn += yyleng; return ASSIGN; }
 
-"&&"                    { return AND; }
-"||"                    { return OR; }
-"!"                     { return NOT; }
-"="                     { return ASSIGN; }
+/* símbolos */
+"("                     { yycolumn += yyleng; return LPAREN; }
+")"                     { yycolumn += yyleng; return RPAREN; }
+"{"                     { yycolumn += yyleng; return LBRACE; }
+"}"                     { yycolumn += yyleng; return RBRACE; }
+","                     { yycolumn += yyleng; return COMMA; }
+";"                     { yycolumn += yyleng; return SEMICOLON; }
 
-.                       { fprintf(stderr, "Caractere não reconhecido: %s\n", yytext); }
+/* ---------- Erro léxico (caracter não reconhecido) ---------- */
+.                       {
+                          fprintf(stderr, "Erro léxico na linha %d, coluna %d: caractere não reconhecido '%s'\n",
+                                  yylineno, yycolumn, yytext);
+                          yycolumn += yyleng;
+                        }
 
 %%
 
