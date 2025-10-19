@@ -42,6 +42,9 @@ void yyerror(const char *s);
 %right NOT
 %right UMINUS
 
+%precedence IFX
+%precedence ELSE
+
 /* Tipagem dos não-terminais com AST */
 %type <node> Program StmtList Stmt Block IfStmt WhileStmt ForStmt
 %type <node> FunctionDef ParamList ArgList
@@ -58,7 +61,7 @@ Program
     ;
 
 StmtList
-    : /* vazio */                           { $$ = NULL; }
+    : %empty                                { $$ = NULL; }
     | StmtList Stmt                         { $$ = NULL; }
     ;
 
@@ -78,7 +81,7 @@ Block
     ;
 
 IfStmt
-    : IF LPAREN Expr RPAREN Stmt            { ast_free($3); $$ = NULL; }
+    : IF LPAREN Expr RPAREN Stmt            { ast_free($3); $$ = NULL; } %prec IFX
     | IF LPAREN Expr RPAREN Stmt ELSE Stmt  { ast_free($3); $$ = NULL; }
     ;
 
@@ -97,13 +100,13 @@ FunctionDef
     ;
 
 ParamList
-    : /* vazio */                           { $$ = NULL; }
+    : %empty                                { $$ = NULL; }
     | IDENT                                 { free($1); $$ = NULL; }
     | ParamList COMMA IDENT                 { free($3); $$ = NULL; }
     ;
 
 ArgList
-    : /* vazio */                           { $$ = NULL; }
+    : %empty                                { $$ = NULL; }
     | Expr                                  { $$ = $1; }
     | ArgList COMMA Expr                    { ast_free($3); $$ = $1; }
     ;
