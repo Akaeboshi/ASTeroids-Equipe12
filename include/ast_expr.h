@@ -14,5 +14,6 @@ Node *ast_block(void);
 void ast_block_add_stmt(Node *block, Node *stmt);
 Node *ast_assign(const char *name, Node *value);
 Node *ast_expr(Node *expr);
+Node *ast_if(Node *cond, Node *then_branch, Node *else_branch);
 
 #endif /* AST_EXPR_H */

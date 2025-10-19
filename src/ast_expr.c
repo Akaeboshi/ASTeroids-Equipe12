@@ -89,3 +89,11 @@ Node *ast_expr(Node *expr) {
   node -> u.as_expr.expr = expr;
   return node;
 }
+
+Node *ast_if(Node *cond, Node *then_branch, Node *else_branch) {
+  Node *node = new_node(ND_IF);
+  node -> u.as_if.cond = cond;
+  node -> u.as_if.then_branch = then_branch;
+  node -> u.as_if.else_branch = else_branch;
+  return node;
+}
