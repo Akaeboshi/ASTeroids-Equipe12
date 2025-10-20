@@ -3,8 +3,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+Node *g_program_ast = NULL;
+int g_parse_errors = 0;
+
 int yylex(void);
-void yyerror(const char *s);
+void yyerror(const char *s) {
+    fprintf(stderr, "Erro sintático: %s\n", s);
+    g_parse_errors++;
+}
 %}
 
 /* Tipos de valores semânticos */
@@ -21,7 +27,7 @@ void yyerror(const char *s);
 %token <floatValue> FLOAT_LIT
 %token <boolValue> BOOL_LIT
 %token <str> IDENT
-%token <str> STRING_LIT   /* novo */
+%token <str> STRING_LIT
 
 /* Tokens sem valor semântico */
 %token LPAREN RPAREN LBRACE RBRACE
@@ -57,36 +63,36 @@ void yyerror(const char *s);
 %%
 
 Program
-    : StmtList
+    : StmtList                              { g_program_ast = $1; $$ = $1; }
     ;
 
 StmtList
-    : %empty                                { $$ = NULL; }
-    | StmtList Stmt                         { $$ = NULL; }
+    : %empty                                { $$ = ast_block(); }
+    | StmtList Stmt                         { if ($2) ast_block_add_stmt($1, $2); $$ = $1; }
     ;
 
 Stmt
-    : Expr SEMICOLON                        { $$ = $1; ast_print($$); ast_print_pretty($$); ast_free($$); $$ = NULL; }
-    | Block                                 { $$ = NULL; }
+    : Expr SEMICOLON                        { $$ = ast_expr($1); }
+    | Block                                 { $$ = $1; }
     | IfStmt                                { $$ = $1; }
-    | WhileStmt                             { $$ = $1; }
-    | ForStmt                               { $$ = $1; }
+    | WhileStmt                             { $$ = NULL; }
+    | ForStmt                               { $$ = NULL; }
     | FunctionDef                           { $$ = NULL; }
     | RETURN Expr SEMICOLON                 { ast_free($2); $$ = NULL; }
     | SEMICOLON                             { $$ = NULL; }
     ;
 
 Block
-    : LBRACE StmtList RBRACE                { $$ = NULL; }
+    : LBRACE StmtList RBRACE                { $$ = $2; }
     ;
 
 IfStmt
-    : IF LPAREN Expr RPAREN Stmt            { ast_free($3); $$ = NULL; } %prec IFX
-    | IF LPAREN Expr RPAREN Stmt ELSE Stmt  { ast_free($3); $$ = NULL; }
+    : IF LPAREN Expr RPAREN Stmt            { $$ = ast_if($3, $5, NULL); } %prec IFX
+    | IF LPAREN Expr RPAREN Stmt ELSE Stmt  { $$ = ast_if($3, $5, $7); }
     ;
 
 WhileStmt
-    : WHILE LPAREN Expr RPAREN Stmt         { ast_free($3); $$ = NULL; }
+    : WHILE LPAREN Expr RPAREN Stmt         { ast_free($3); $$ = NULL;  }
     ;
 
 ForStmt
@@ -172,11 +178,3 @@ Num
     ;
 
 %%
-
-int main(void) {
-    return yyparse();
-}
-
-void yyerror(const char *s) {
-    fprintf(stderr, "Erro sintático: %s\n", s);
-}
