@@ -6,9 +6,13 @@
 Node *g_program_ast = NULL;
 int g_parse_errors = 0;
 
+extern int yylineno;
+extern int yycolumn;
+
 int yylex(void);
+
 void yyerror(const char *s) {
-    fprintf(stderr, "Erro sintático: %s\n", s);
+    fprintf(stderr, "Erro sintático (%d:%d): %s\n", yylineno, yycolumn, s);
     g_parse_errors++;
 }
 %}
@@ -37,6 +41,7 @@ void yyerror(const char *s) {
 %token ASSIGN
 %token COMMA SEMICOLON
 %token IF ELSE WHILE FOR FUNCTION RETURN
+%token ERROR
 
 /* Regras de precedência e associatividade */
 %left OR
@@ -50,6 +55,9 @@ void yyerror(const char *s) {
 
 %precedence IFX
 %precedence ELSE
+
+/* Habilita mensagens de erro detalhadas */
+%define parse.error verbose
 
 /* Tipagem dos não-terminais com AST */
 %type <node> Program StmtList Stmt Block IfStmt WhileStmt ForStmt
@@ -80,6 +88,8 @@ Stmt
     | FunctionDef                           { $$ = NULL; }
     | RETURN Expr SEMICOLON                 { ast_free($2); $$ = NULL; }
     | SEMICOLON                             { $$ = NULL; }
+    | ERROR { yyerrok; $$ = NULL; }  /* consome erro léxico isolado */
+    | error SEMICOLON { yyerror("recuperado: instrução inválida"); yyerrok; $$ = NULL; }
     ;
 
 Block
@@ -87,7 +97,7 @@ Block
     ;
 
 IfStmt
-    : IF LPAREN Expr RPAREN Stmt            { $$ = ast_if($3, $5, NULL); } %prec IFX
+    : IF LPAREN Expr RPAREN Stmt %prec IFX  { $$ = ast_if($3, $5, NULL); }
     | IF LPAREN Expr RPAREN Stmt ELSE Stmt  { $$ = ast_if($3, $5, $7); }
     ;
 
