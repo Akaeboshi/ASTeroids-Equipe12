@@ -66,4 +66,6 @@ void *xmalloc(size_t size);
 char *xstrdup(const char *s);
 struct Node *new_node(NodeKind kind);
 
+Node *ast_copy(Node *node);
+
 #endif /* AST_BASE_H */

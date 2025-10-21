@@ -5,5 +5,6 @@
 #include "ast_expr.h"
 #include "ast_printer.h"
 #include "ast_free.h"
+#include "symbol_table.h"
 
 #endif /* AST_H */
