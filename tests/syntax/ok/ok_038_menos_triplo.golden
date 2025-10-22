@@ -1,0 +1,6 @@
+Block
+  Expression
+    Unary(-)
+      Unary(-)
+        Unary(-)
+          Ident(x)

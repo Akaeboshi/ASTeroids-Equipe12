@@ -37,6 +37,11 @@ void ast_free(Node *node) {
       case ND_EXPR:
         ast_free(node -> u.as_expr.expr);
         break;
+      case ND_IF:
+        ast_free(node -> u.as_if.cond);
+        ast_free(node -> u.as_if.then_branch);
+        if (node->u.as_if.else_branch) ast_free(node->u.as_if.else_branch);
+        break;
   }
 
   free(node);

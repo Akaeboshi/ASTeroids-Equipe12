@@ -1,17 +1,15 @@
+%option yylineno
+%option noinput nounput
+%x COMMENT
+
 %{
-/*
-  scanner.l - scanner Flex melhorado
-  - %option yylineno para controle automático de linhas (yylineno)
-  - variavel global yycolumn para coluna atual (inicial 1)
-  - unescape de strings (\" \\n \\t \\r \\\\ etc.)
-  - atualização consistente de coluna (yycolumn += yyleng)
-  - mensagens de erro léxico com linha/coluna
-  - comentários (// e /* */) com atualização de linha
-*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "parser.tab.h"   /* tokens e yylval do Bison (gerado por bison -d) */
+
+void yyerror(const char *s); /* declarada em parser.y */
+extern int g_parse_errors;   /* contador do parser.y */
 
 /* coluna atual (mantida manualmente) */
 int yycolumn = 1;
@@ -46,10 +44,6 @@ static char *unescape_string(const char *src) {
     return out;
 }
 %}
-
-/* opções do flex */
-%option noinput nounput yylineno
-%x COMMENT
 
 %%
 
@@ -114,6 +108,7 @@ static char *unescape_string(const char *src) {
                           fprintf(stderr, "Erro léxico: comentário multilinha não fechado (linha %d)\n", yylineno);
                           exit(1);
                         }
+<COMMENT>.              { ADVANCE_COL; }
 
 /* ---------- Operadores compostos/simbolos (mais específicos antes) ---------- */
 "=="                    { yycolumn += yyleng; return EQ; }

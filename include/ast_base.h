@@ -14,7 +14,8 @@ typedef enum {
   ND_BINARY,    // expressão binária (+, -, *, /)
   ND_BLOCK,     // bloco de código ({ stmt* })
   ND_ASSIGN,    // atribuição (identificador = expr)
-  ND_EXPR       // expressão genérica
+  ND_EXPR,      // expressão genérica
+  ND_IF         // instrução if
 } NodeKind;
 
 typedef enum {
@@ -58,6 +59,7 @@ struct Node {
     struct { Node **stmts; size_t count; size_t capacity; } as_block;
     struct { char *name; Node *value; } as_assign;
     struct { Node *expr; } as_expr;
+    struct { Node *cond; Node *then_branch; Node *else_branch; } as_if;
   } u;
 };
 

@@ -1,0 +1,6 @@
+Block
+  Expression
+    Binary(&&)
+      Unary(!)
+        Ident(a)
+      Ident(b)
