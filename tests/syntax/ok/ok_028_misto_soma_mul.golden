@@ -1,0 +1,11 @@
+Block
+  Expression
+    Binary(+)
+      Binary(+)
+        Int(2)
+        Binary(*)
+          Int(3)
+          Int(4)
+      Binary(*)
+        Int(5)
+        Int(6)

@@ -1,0 +1,10 @@
+Block
+  Expression
+    Binary(+)
+      Unary(-)
+        Unary(-)
+          Ident(x)
+      Binary(*)
+        Ident(y)
+        Unary(-)
+          Ident(z)
