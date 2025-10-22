@@ -101,10 +101,10 @@ int main(int argc, char **argv) {
     /* Etapa 5: Impressão e liberação da AST                                  */
     /* ---------------------------------------------------------------------- */
     if (g_program_ast) {
-        printf("\n=== AST (Compacta) ===\n");
+        printf("=== AST (Compacta) ===\n");
         ast_print(g_program_ast);
 
-        printf("\n=== AST (Formatada) ===\n");
+        printf("=== AST (Formatada) ===\n");
         ast_print_pretty(g_program_ast);
 
         ast_free(g_program_ast);

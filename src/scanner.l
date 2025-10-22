@@ -47,15 +47,15 @@ false                   { ADVANCE_COL; yylval.boolValue = 0; return BOOL_LIT; }
 
 [a-zA-Z_][a-zA-Z0-9_]*  { ADVANCE_COL; yylval.str = strdup(yytext); return IDENT; }
 
-"//".*                  { ADVANCE_COL; } /* ignora comentário de linha */
+"//".* { ADVANCE_COL; }
 "/*"                    { ADVANCE_COL; BEGIN(COMMENT); }
 <COMMENT>"*/"           { ADVANCE_COL; BEGIN(INITIAL); }
-<COMMENT>[^\n]+         { ADVANCE_COL; } /* conteúdo do comentário avança coluna */
 <COMMENT>\n             { yycolumn = 1; }
-<COMMENT><<EOF>>        { /* Fim de arquivo dentro de comentário */
+<COMMENT><<EOF>>        {
                           yyerror("Comentário multilinha não foi fechado");
                           yyterminate();
                         }
+<COMMENT>.              { ADVANCE_COL; }
 
 "+"                     { ADVANCE_COL; return PLUS; }
 "-"                     { ADVANCE_COL; return MINUS; }
