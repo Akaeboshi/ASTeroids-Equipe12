@@ -18,7 +18,7 @@ AST_OBJS = ast_base.o ast_expr.o ast_free.o ast_printer.o symbol_table.o
 
 # Parâmetros opcionais ao Bison e Flex
 BISON_FLAGS = -d   # -d gera o arquivo .h (token definitions)
-FLEX_FLAGS  =      # deixe vazio ou acrescente opções, se necessário
+FLEX_FLAGS  =
 
 # Parâmetros de compilação
 CC      = gcc

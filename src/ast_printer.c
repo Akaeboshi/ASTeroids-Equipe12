@@ -28,7 +28,6 @@ static const char *unop_to_str(UnOp op) {
   }
 }
 
-/* Versão Compacta */
 static void print (const Node *node) {
   if(!node) { printf("NULL"); return; }
 
@@ -88,7 +87,6 @@ void ast_print(const Node *node) {
   printf("\n");
 }
 
-/* Versão Indentada */
 static void print_pretty(const Node *node, int depth) {
   if (!node) {
     for (int i = 0; i < depth; i++) putchar(' ');
