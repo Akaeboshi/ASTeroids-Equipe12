@@ -11,12 +11,10 @@
 void yyerror(const char *s); /* declarada em parser.y */
 extern int g_parse_errors;   /* contador do parser.y */
 
-/* coluna atual (mantida manualmente) */
-int yycolumn = 1;
+int yycolumn = 1; /* coluna atual - inicializada em 1 no driver */
+#define ADVANCE_COLUMN (yycolumn += yyleng) /* macro para avançar a coluna */
 
-/* Função simples para transformar sequências de escape em caracteres reais.
-   Recebe uma string *sem* aspas (ex: entrada: hello\nworld -> processa \n -> newline).
-   Retorna malloc()'ed string (caller must free). */
+/* Função simples para transformar sequências de escape em caracteres reais */
 static char *unescape_string(const char *src) {
     size_t sl = strlen(src);
     char *out = malloc(sl + 1);
@@ -47,21 +45,13 @@ static char *unescape_string(const char *src) {
 
 %%
 
-/* ---------- Literais e palavras-chave ---------- */
+"true"                  { yylval.boolValue = 1; ADVANCE_COLUMN; return BOOL_LIT; } /* booleanos */
+"false"                 { yylval.boolValue = 0; ADVANCE_COLUMN; return BOOL_LIT; }
 
-/* booleanos */
-"true"                  { yylval.boolValue = 1; yycolumn += yyleng; return BOOL_LIT; }
-"false"                 { yylval.boolValue = 0; yycolumn += yyleng; return BOOL_LIT; }
+[0-9]+\.[0-9]+([eE][-+]?[0-9]+)?   { yylval.floatValue = strtod(yytext, NULL); ADVANCE_COLUMN; return FLOAT_LIT; } /* float */
+[0-9]+                  { yylval.intValue = atoi(yytext); ADVANCE_COLUMN; return INT_LIT; } /* inteiro */
 
-/* float (colocado antes de int) - aceita ex: 3.14 e 1.2e-3 */
-[0-9]+\.[0-9]+([eE][-+]?[0-9]+)?   { yylval.floatValue = strtod(yytext, NULL); yycolumn += yyleng; return FLOAT_LIT; }
-
-/* int */
-[0-9]+                  { yylval.intValue = atoi(yytext); yycolumn += yyleng; return INT_LIT; }
-
-/* string com escapes - aceita \" \\n \\t etc.
-   yytext inclui as aspas, por isso removemos a primeira e última char. */
-\"([^\\\n]|(\\.))*\"    {
+\"([^\\\n]|(\\.))*\"    { /* string com escapes - aceita \" \\n \\t etc. */
                           size_t raw_len = (yyleng >= 2) ? yyleng - 2 : 0;
                           char *raw = malloc(raw_len + 1);
                           if (!raw) { fprintf(stderr, "Erro de memória\n"); exit(1); }
@@ -70,79 +60,68 @@ static char *unescape_string(const char *src) {
                           char *un = unescape_string(raw);
                           free(raw);
                           yylval.str = un;   /* quem consumir deve free() */
-                          yycolumn += yyleng;
+                          ADVANCE_COLUMN;
                           return STRING_LIT;
                         }
 
-/* ---------- Palavras-chave (mantidas explicitamente) ---------- */
-"if"                    { yycolumn += yyleng; return IF; }
-"else"                  { yycolumn += yyleng; return ELSE; }
-"while"                 { yycolumn += yyleng; return WHILE; }
-"for"                   { yycolumn += yyleng; return FOR; }
-"function"              { yycolumn += yyleng; return FUNCTION; }
-"return"                { yycolumn += yyleng; return RETURN; }
+"if"                    { ADVANCE_COLUMN; return IF; } /* palavras-chave */
+"else"                  { ADVANCE_COLUMN; return ELSE; }
+"while"                 { ADVANCE_COLUMN; return WHILE; }
+"for"                   { ADVANCE_COLUMN; return FOR; }
+"function"              { ADVANCE_COLUMN; return FUNCTION; }
+"return"                { ADVANCE_COLUMN; return RETURN; }
 
-/* ---------- Identificador (fallback para palavras-chave) ---------- */
-/* Note: regras de palavras-chave vêm antes, então identificadores longos não são 'quebrados'. */
-[a-zA-Z_][a-zA-Z0-9_]*  { yylval.str = strdup(yytext); yycolumn += yyleng; return IDENT; }
+[a-zA-Z_][a-zA-Z0-9_]*  { yylval.str = strdup(yytext); ADVANCE_COLUMN; return IDENT; } /* identificadores */
 
-/* ---------- Espaços e quebras de linha (atualizam coluna/linha) ---------- */
-[\t ]+                  { yycolumn += yyleng; /* ignora tabs/espacos */ }
-\r\n                    { yylineno++; yycolumn = 1; }
-\n                      { yylineno++; yycolumn = 1; }
-\r                      { yylineno++; yycolumn = 1; }
+[\t ]+                  { ADVANCE_COLUMN; } /* ignora tabs/espacos */
+\r\n                    { yycolumn = 1; }
+\n                      { yycolumn = 1; }
+\r                      { yycolumn = 1; }
 
-/* ---------- Comentários ---------- */
-/* comentário linha única (consume até newline, coluna avança pelo comprimento) */
-"//"[^\n]*              { yycolumn += yyleng; /* ignora */ }
+"//"[^\n]*              { ADVANCE_COLUMN; } /* comentário de linha */
+"/*"                    { ADVANCE_COLUMN; BEGIN(COMMENT); } /* comentário multilinha */
 
-/* comentário multilinha - entra em estado COMMENT */
-"/*"                    { yycolumn += yyleng; BEGIN(COMMENT); }
-
-/* dentro de comentário multilinha: */
-<COMMENT>"*/"           { yycolumn += yyleng; BEGIN(INITIAL); }
-<COMMENT>\r\n           { yylineno++; yycolumn = 1; }
-<COMMENT>\n             { yylineno++; yycolumn = 1; }
-<COMMENT>.              { yycolumn += yyleng; /* qualquer outro caractere dentro do comentário */ }
+<COMMENT>"*/"           { ADVANCE_COLUMN; BEGIN(INITIAL); } /* fim do comentário */
+<COMMENT>\r\n           { yycolumn = 1; } /* nova linha dentro do comentário */
+<COMMENT>\n             { yycolumn = 1; }
+<COMMENT>.              { ADVANCE_COLUMN; } /* qualquer outro caractere dentro do comentário */
 <COMMENT><<EOF>>        {
                           fprintf(stderr, "Erro léxico: comentário multilinha não fechado (linha %d)\n", yylineno);
                           exit(1);
                         }
-<COMMENT>.              { ADVANCE_COL; }
 
-/* ---------- Operadores compostos/simbolos (mais específicos antes) ---------- */
-"=="                    { yycolumn += yyleng; return EQ; }
-"!="                    { yycolumn += yyleng; return NEQ; }
-"<="                    { yycolumn += yyleng; return LE; }
-">="                    { yycolumn += yyleng; return GE; }
+"=="                    { ADVANCE_COLUMN; return EQ; } /* operadores compostos */
+"!="                    { ADVANCE_COLUMN; return NEQ; }
+"<="                    { ADVANCE_COLUMN; return LE; }
+">="                    { ADVANCE_COLUMN; return GE; }
 
-"&&"                    { yycolumn += yyleng; return AND; }
-"||"                    { yycolumn += yyleng; return OR; }
+"&&"                    { ADVANCE_COLUMN; return AND; } /* operadores lógicos */
+"||"                    { ADVANCE_COLUMN; return OR; }
 
-/* operadores simples */
-"<"                     { yycolumn += yyleng; return LT; }
-">"                     { yycolumn += yyleng; return GT; }
-"+"                     { yycolumn += yyleng; return PLUS; }
-"-"                     { yycolumn += yyleng; return MINUS; }
-"*"                     { yycolumn += yyleng; return TIMES; }
-"/"                     { yycolumn += yyleng; return DIVIDE; }
-"!"                     { yycolumn += yyleng; return NOT; }
-"="                     { yycolumn += yyleng; return ASSIGN; }
+"<"                     { ADVANCE_COLUMN; return LT; } /* operadores simples */
+">"                     { ADVANCE_COLUMN; return GT; }
+"+"                     { ADVANCE_COLUMN; return PLUS; }
+"-"                     { ADVANCE_COLUMN; return MINUS; }
+"*"                     { ADVANCE_COLUMN; return TIMES; }
+"/"                     { ADVANCE_COLUMN; return DIVIDE; }
+"!"                     { ADVANCE_COLUMN; return NOT; }
+"="                     { ADVANCE_COLUMN; return ASSIGN; }
 
-/* símbolos */
-"("                     { yycolumn += yyleng; return LPAREN; }
-")"                     { yycolumn += yyleng; return RPAREN; }
-"{"                     { yycolumn += yyleng; return LBRACE; }
-"}"                     { yycolumn += yyleng; return RBRACE; }
-","                     { yycolumn += yyleng; return COMMA; }
-";"                     { yycolumn += yyleng; return SEMICOLON; }
+"("                     { ADVANCE_COLUMN; return LPAREN; } /* símbolos */
+")"                     { ADVANCE_COLUMN; return RPAREN; }
+"{"                     { ADVANCE_COLUMN; return LBRACE; }
+"}"                     { ADVANCE_COLUMN; return RBRACE; }
+","                     { ADVANCE_COLUMN; return COMMA; }
+";"                     { ADVANCE_COLUMN; return SEMICOLON; }
 
-/* ---------- Erro léxico (caracter não reconhecido) ---------- */
+
 .                       {
-                          fprintf(stderr, "Erro léxico na linha %d, coluna %d: caractere não reconhecido '%s'\n",
-                                  yylineno, yycolumn, yytext);
-                          yycolumn += yyleng;
-                        }
+                          char msg[160];
+                          snprintf(msg, sizeof msg, "caractere não reconhecido '%s'", yytext);
+                          yyerror(msg);           /* usa seu handler do Bison (conta erro/linha/coluna) */
+                          ADVANCE_COLUMN;
+                          return ERROR;           /* avisa o parser! */
+                        } /* ---------- Erro léxico (caractere não reconhecido) ---------- */
 
 %%
 
