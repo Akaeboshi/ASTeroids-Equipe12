@@ -1,17 +1,98 @@
-# ASTeroids-Equipe12 Compilador
+# 🚀 ASTeroids-Equipe12 Compilador
 
-## 📝 Introdução  
+## 📝 Introdução
 
-Este repositório contém os materiais e estudos desenvolvidos na disciplina de **Compiladores 1** do curso de **Engenharia de Software da Universidade de Brasília (FCTE/UnB)**.  
-O objetivo é aprofundar conceitos, métodos e técnicas de compiladores. 
-## 📝 Documentação
-https://akaeboshi.github.io/ASTeroids-Equipe12/
-## 🎯 Sobre Compiladores 
+Este repositório contém os materiais e estudos desenvolvidos na disciplina de **Compiladores 1** do curso de **Engenharia de Software da Universidade de Brasília (FCTE/UnB)**.
+O objetivo é aprofundar conceitos, métodos e técnicas de compiladores.
 
-Um **compilador** é um programa que transcreve um codigo em uma linguagem, no caso do grupo, **C++**, para outra linguagem, no caso do grupo, **javasscript**. é como um tradutor de codigo de uma linguagem para outra.
+---
+
+## 📚 Documentação
+
+<https://akaeboshi.github.io/ASTeroids-Equipe12/>
+
+---
+
+## 🎯 Sobre Compiladores
+
+Um **compilador** é um programa que transcreve um codigo em uma linguagem, no caso do grupo, **C++**, para outra linguagem, no caso do grupo, **javascript**. É como um tradutor de codigo de uma linguagem para outra.
 Seu objetivo é permitir que programas escritos em uma linguagem de alto nível sejam entendidos e executados por outra plataforma ou máquina, garantindo eficiência e correção na execução.
 
-## 👥 Equipe  
+---
+
+## ⚙️ Execução do Projeto
+
+### 🔧 Compilar
+
+Compila todo o pipeline (Flex + Bison + AST):
+
+```bash
+make
+```
+
+### ▶️ Executar o parser
+
+Rodar interativamente (entrada via teclado):
+
+```bash
+make run
+```
+
+Rodar com arquivo de entrada:
+
+```bash
+make run FILE=exemplos/if.txt
+```
+
+### 🧪 Rodar todos os testes
+
+Executa a suíte de testes automatizados:
+
+```bash
+make test
+```
+
+Ao final, o script exibirá um resumo dos testes que passaram e falharam.
+
+### 🧹 Limpar artefatos gerados
+
+Remove arquivos gerados por Bison/Flex e binários:
+
+```bash
+make clean
+```
+
+---
+
+## 🗂️ Estrutura do Projeto
+
+```text
+asreroids-equipe12/
+├── src/
+│   ├── parser.y          # Gramática principal (Bison)
+│   ├── scanner.l         # Analisador léxico (Flex)
+│   ├── ast_base.c/.h     # Estrutura base da AST
+│   ├── ast_expr.c/.h     # Expressões e operadores
+│   ├── ast_printer.c/.h  # Impressão da AST
+│   ├── ast_free.c/.h     # Liberação de memória da AST
+│   ├── main.c            # Programa principal (executa parser)
+│
+├── include/              # Headers e definições globais
+│
+├── tests/
+│   ├── syntax/           # Casos de teste sintático
+│   ├── semantic/         # Casos de teste semântico
+│   ├── intermediate/     # Casos de código intermediário
+│   ├── generation/       # Casos de geração de código
+│   └── run.sh            # Script automatizado de testes
+│
+├── docs/                 # Documentação adicional (diagramas, relatórios)
+└── Makefile              # Automação de build, run e test
+```
+
+---
+
+## 👥 Equipe
 
 <table>
   <tr>

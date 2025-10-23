@@ -80,6 +80,16 @@ static void print (const Node *node) {
       print(node -> u.as_expr.expr);
       printf(";");
       break;
+    case ND_IF:
+        printf("if (");
+        print(node -> u.as_if.cond);
+        printf(") ");
+        print(node -> u.as_if.then_branch);
+        if (node -> u.as_if.else_branch) {
+          printf(" else ");
+          print(node -> u.as_if.else_branch);
+        }
+        break;
   }
 }
 
@@ -136,6 +146,17 @@ static void print_pretty(const Node *node, int depth) {
       case ND_EXPR:
         printf("Expression\n");
         print_pretty(node -> u.as_expr.expr, depth + 2);
+        break;
+      case ND_IF:
+        printf("If\n");
+        printf("  Cond:\n");
+        print_pretty(node->u.as_if.cond, depth + 4);
+        printf("  Then:\n");
+        print_pretty(node->u.as_if.then_branch, depth + 4);
+        if (node->u.as_if.else_branch) {
+          printf("  Else:\n");
+          print_pretty(node->u.as_if.else_branch, depth + 4);
+        }
         break;
   }
 }
