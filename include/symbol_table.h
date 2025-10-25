@@ -6,8 +6,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-void ast_free(Node *node);
-
 typedef struct Symbol {
     char *name;
     Node *value;

@@ -87,7 +87,6 @@ bool insert_variable(const char *name, Node *value) {
 %token <boolValue> BOOL_LIT
 %token <str> IDENT
 %token <str> STRING_LIT
-%token VAR
 
 %token LPAREN RPAREN LBRACE RBRACE
 %token PLUS MINUS TIMES DIVIDE
@@ -106,6 +105,7 @@ bool insert_variable(const char *name, Node *value) {
 %left TIMES DIVIDE
 %right NOT
 %right UMINUS
+%right ASSIGN
 
 %precedence IFX
 %precedence ELSE
@@ -116,7 +116,7 @@ bool insert_variable(const char *name, Node *value) {
 %type <node> Program StmtList Stmt Block IfStmt WhileStmt ForStmt
 %type <node> FunctionDef ParamList ArgList
 %type <node> Expr OrExpr AndExpr EqExpr RelExpr AddExpr MulExpr Unary Primary
-%type <node> Num AssignStmt VarDecl
+%type <node> Num AssignExpr
 
 %start Program
 
@@ -132,184 +132,41 @@ StmtList
     ;
 
 Stmt
-    : Expr SEMICOLON                        {
-        ast_print($1);
-        ast_print_pretty($1);
-        $$ = NULL;
-    }
-    | AssignStmt                            { $$ = NULL; }
-    | VarDecl                               { $$ = NULL; }
-    | Block                                 { $$ = NULL; }
+    : Expr SEMICOLON                        { $$ = ast_expr($1); }
+    | Block                                 { $$ = $1; }
     | IfStmt                                { $$ = $1; }
     | WhileStmt                             { $$ = NULL; }
     | ForStmt                               { $$ = NULL; }
     | FunctionDef                           { $$ = NULL; }
     | RETURN Expr SEMICOLON                 { ast_free($2); $$ = NULL; }
     | SEMICOLON                             { $$ = NULL; }
-    | ERROR { yyerrok; $$ = NULL; }  /* consome erro léxico isolado */
-    | error SEMICOLON { yyerror("recuperado: instrução inválida"); yyerrok; $$ = NULL; }
-    ;
-
-VarDecl
-    : VAR IDENT SEMICOLON                   {
-        // Declara variável com valor padrão (0)
-        Node *default_value = ast_int(0);
-        if (!insert_variable($2, default_value)) {
-            yyerror("Variável já declarada no escopo atual");
-            free($2);
-            ast_free(default_value);
-            YYERROR;
-        }
-        printf("Declarada variável: %s = ", $2);
-        ast_print(default_value);
-        printf("\n");
-        free($2);
-        $$ = NULL;
-    }
-    | VAR IDENT ASSIGN Expr SEMICOLON       {
-        // Declara e atribui
-        if (!insert_variable($2, ast_copy($4))) {
-            yyerror("Variável já declarada no escopo atual");
-            free($2);
-            ast_free($4);
-            YYERROR;
-        }
-        printf("Declarada e atribuída: %s = ", $2);
-        ast_print($4);
-        printf("\n");
-        free($2);
-        $$ = NULL;
-    }
-    ;
-
-AssignStmt
-    : IDENT ASSIGN Expr SEMICOLON           {
-        // Verifica se a variável existe em algum escopo
-        Node *existing = lookup_variable($1);
-        if (!existing) {
-            yyerror("Variável não declarada");
-            free($1);
-            ast_free($3);
-            YYERROR;
-        }
-
-        // Insere no escopo atual (sobrescreve)
-        if (!insert_variable($1, ast_copy($3))) {
-            yyerror("Erro ao atribuir variável");
-            free($1);
-            ast_free($3);
-            YYERROR;
-        }
-        printf("Atribuído: %s = ", $1);
-        ast_print($3);
-        printf("\n");
-        free($1);
-        $$ = NULL;
-    }
-    ;
-
-VarDecl
-    : VAR IDENT SEMICOLON                   {
-        // Declara variável com valor padrão (0)
-        Node *default_value = ast_int(0);
-        if (!insert_variable($2, default_value)) {
-            yyerror("Variável já declarada no escopo atual");
-            free($2);
-            ast_free(default_value);
-            YYERROR;
-        }
-        printf("Declarada variável: %s = ", $2);
-        ast_print(default_value);
-        printf("\n");
-        free($2);
-        $$ = NULL;
-    }
-    | VAR IDENT ASSIGN Expr SEMICOLON       {
-        // Declara e atribui
-        if (!insert_variable($2, ast_copy($4))) {
-            yyerror("Variável já declarada no escopo atual");
-            free($2);
-            ast_free($4);
-            YYERROR;
-        }
-        printf("Declarada e atribuída: %s = ", $2);
-        ast_print($4);
-        printf("\n");
-        free($2);
-        $$ = NULL;
-    }
-    ;
-
-AssignStmt
-    : IDENT ASSIGN Expr SEMICOLON           {
-        // Verifica se a variável existe em algum escopo
-        Node *existing = lookup_variable($1);
-        if (!existing) {
-            yyerror("Variável não declarada");
-            free($1);
-            ast_free($3);
-            YYERROR;
-        }
-
-        // Insere no escopo atual (sobrescreve)
-        if (!insert_variable($1, ast_copy($3))) {
-            yyerror("Erro ao atribuir variável");
-            free($1);
-            ast_free($3);
-            YYERROR;
-        }
-        printf("Atribuído: %s = ", $1);
-        ast_print($3);
-        printf("\n");
-        free($1);
-        $$ = NULL;
-    }
+    | ERROR                                 { yyerrok; $$ = NULL; }  /* consome erro léxico isolado */
+    | error SEMICOLON                       { yyerror("recuperado: instrução inválida"); yyerrok; $$ = NULL; }
     ;
 
 Block
-    : LBRACE { push_scope(); } StmtList { pop_scope(); } RBRACE
-        { $$ = NULL; }
+    : LBRACE              { push_scope(); }
+      StmtList
+      RBRACE              { pop_scope(); $$ = $3; }
     ;
 
 IfStmt
-    : IF LPAREN Expr RPAREN Stmt            {
-        ast_free($3);
-        ast_free($5);
-        $$ = NULL;
-    }
-    | IF LPAREN Expr RPAREN Stmt ELSE Stmt  {
-        ast_free($3);
-        ast_free($5);
-        ast_free($7);
-        $$ = NULL;
-    }
-    ;
+  : IF LPAREN Expr RPAREN Stmt %prec IFX   { $$ = ast_if($3, $5, NULL); }
+  | IF LPAREN Expr RPAREN Stmt ELSE Stmt   { $$ = ast_if($3, $5, $7);   }
+  ;
 
 WhileStmt
-    : WHILE LPAREN Expr RPAREN Stmt         {
-        ast_free($3);
-        ast_free($5);
-        $$ = NULL;
-    }
+    : WHILE LPAREN Expr RPAREN Stmt         { ast_free($3); ast_free($5); $$ = NULL; }
     ;
 
 ForStmt
     : FOR LPAREN Expr SEMICOLON Expr SEMICOLON Expr RPAREN Stmt
-        {
-            ast_free($3);
-            ast_free($5);
-            ast_free($7);
-            ast_free($9);
-            $$ = NULL;
-        }
+                                            { ast_free($3); ast_free($5); ast_free($7); ast_free($9); $$ = NULL; }
     ;
 
 FunctionDef
     : FUNCTION IDENT LPAREN ParamList RPAREN Block
-        {
-            free($2);
-            $$ = NULL;
-        }
+                                            { free($2); ast_free($6); $$ = NULL; }
     ;
 
 ParamList
@@ -325,7 +182,16 @@ ArgList
     ;
 
 Expr
-    : OrExpr                                { $$ = $1; }
+    : AssignExpr                            { $$ = $1; }
+    ;
+
+AssignExpr
+    : OrExpr
+    | IDENT ASSIGN AssignExpr               {
+                                                insert_variable($1, ast_copy($3));
+                                                $$ = ast_assign($1, $3);
+                                                free($1);
+                                            }
     ;
 
 OrExpr
@@ -373,17 +239,7 @@ Unary
 Primary
     : LPAREN Expr RPAREN                    { $$ = $2; }
     | Num                                   { $$ = $1; }
-    | IDENT                                 {
-        // Busca o valor em todos os escopos
-        Node *value = lookup_variable($1);
-        if (value == NULL) {
-            yyerror("Variável não definida");
-            free($1);
-            YYERROR;
-        }
-        $$ = ast_copy(value);
-        free($1);
-    }
+    | IDENT                                 { $$ = ast_ident($1); free($1); }
     | IDENT LPAREN ArgList RPAREN           { free($1); $$ = NULL; }
     | STRING_LIT                            { $$ = ast_string($1); free($1); }
     ;
@@ -395,20 +251,3 @@ Num
     ;
 
 %%
-
-int main(void) {
-    // Inicializa com escopo global
-    push_scope();
-
-    int result = yyparse();
-
-    // Limpa todos os escopos
-    while (scope_stack) {
-        pop_scope();
-    }
-    return result;
-}
-
-void yyerror(const char *s) {
-    fprintf(stderr, "Erro: %s\n", s);
-}

@@ -1,5 +1,5 @@
 // symbol_table.c
-#include "symbol_table.h"
+#include "ast.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,12 +8,12 @@
 
 // Função hash simples para strings
 static size_t hash(const char *str, size_t capacity) {
-    size_t hash = 5381;
+    size_t hash_value = 5381;
     int c;
     while ((c = *str++)) {
-        hash = ((hash << 5) + hash) + c; // hash * 33 + c
+        hash_value = ((hash_value << 5) + hash_value) + c; // hash * 33 + c
     }
-    return hash % capacity;
+    return hash_value % capacity;
 }
 
 SymbolTable* st_create(void) {
@@ -22,7 +22,7 @@ SymbolTable* st_create(void) {
     table->size = 0;
     table->parent = NULL;
     table->buckets = (Symbol**)xmalloc(table->capacity * sizeof(Symbol*));
-    
+
     for (size_t i = 0; i < table->capacity; i++) {
         table->buckets[i] = NULL;
     }
@@ -31,7 +31,7 @@ SymbolTable* st_create(void) {
 
 void st_destroy(SymbolTable *table) {
     if (!table) return;
-    
+
     for (size_t i = 0; i < table->capacity; i++) {
         Symbol *current = table->buckets[i];
         while (current) {
@@ -48,10 +48,10 @@ void st_destroy(SymbolTable *table) {
 
 bool st_insert(SymbolTable *table, const char *name, Node *value) {
     if (!table || !name) return false;
-    
+
     size_t index = hash(name, table->capacity);
     Symbol *current = table->buckets[index];
-    
+
     // Verifica se já existe
     while (current) {
         if (strcmp(current->name, name) == 0) {
@@ -62,7 +62,7 @@ bool st_insert(SymbolTable *table, const char *name, Node *value) {
         }
         current = current->next;
     }
-    
+
     // Cria novo símbolo
     Symbol *new_symbol = (Symbol*)xmalloc(sizeof(Symbol));
     new_symbol->name = xstrdup(name);
@@ -70,16 +70,16 @@ bool st_insert(SymbolTable *table, const char *name, Node *value) {
     new_symbol->next = table->buckets[index];
     table->buckets[index] = new_symbol;
     table->size++;
-    
+
     return true;
 }
 
 Node* st_lookup(SymbolTable *table, const char *name) {
     if (!table || !name) return NULL;
-    
+
     size_t index = hash(name, table->capacity);
     Symbol *current = table->buckets[index];
-    
+
     while (current) {
         if (strcmp(current->name, name) == 0) {
             return current->value;
@@ -101,11 +101,11 @@ Node* st_lookup_recursive(SymbolTable *table, const char *name) {
 
 bool st_remove(SymbolTable *table, const char *name) {
     if (!table || !name) return false;
-    
+
     size_t index = hash(name, table->capacity);
     Symbol *current = table->buckets[index];
     Symbol *prev = NULL;
-    
+
     while (current) {
         if (strcmp(current->name, name) == 0) {
             if (prev) {
@@ -130,7 +130,7 @@ void st_print(SymbolTable *table) {
         printf("Tabela de símbolos: NULL\n");
         return;
     }
-    
+
     printf("Tabela de símbolos (%zu símbolos):\n", table->size);
     for (size_t i = 0; i < table->capacity; i++) {
         Symbol *current = table->buckets[i];

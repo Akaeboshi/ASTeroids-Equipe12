@@ -25,7 +25,7 @@ Node *new_node(NodeKind kind) {
 
 Node *ast_copy(Node *node) {
     if (!node) return NULL;
-    Node *copy = new_node(node->kind);  // Mudei o nome para 'copy'
+    Node *copy = new_node(node->kind);
     switch (node->kind) {
         case ND_INT:
             copy->u.as_int.value = node->u.as_int.value;
@@ -60,6 +60,11 @@ Node *ast_copy(Node *node) {
             break;
         case ND_EXPR:
             copy->u.as_expr.expr = ast_copy(node->u.as_expr.expr);
+            break;
+        case ND_IF:
+            copy->u.as_if.cond        = ast_copy(node->u.as_if.cond);
+            copy->u.as_if.then_branch = ast_copy(node->u.as_if.then_branch);
+            copy->u.as_if.else_branch = ast_copy(node->u.as_if.else_branch);
             break;
     }
     return copy;

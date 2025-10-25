@@ -13,8 +13,16 @@ EXEC := $(SRC_DIR)/parser
 # -----------------------------
 # Fontes (AST + main)
 # -----------------------------
-AST_SRCS   := $(SRC_DIR)/ast_base.c $(SRC_DIR)/ast_expr.c $(SRC_DIR)/ast_printer.c $(SRC_DIR)/ast_free.c
-MAIN_SRC   := $(SRC_DIR)/main.c
+AST_SRCS := \
+  $(SRC_DIR)/ast_base.c \
+  $(SRC_DIR)/ast_expr.c \
+  $(SRC_DIR)/ast_printer.c \
+  $(SRC_DIR)/ast_free.c
+
+SEMANTIC_SRCS := \
+  $(SRC_DIR)/symbol_table.c
+
+MAIN_SRC := $(SRC_DIR)/main.c
 
 # -----------------------------
 # Gerados (Bison/Flex)
@@ -35,7 +43,7 @@ FLEX_C     := $(SRC_DIR)/lex.yy.c
 # Ferramentas e flags
 # -----------------------------
 CC      = gcc
-CFLAGS := -I$(INCLUDE_DIR) -I$(SRC_DIR)
+CFLAGS := -I$(INCLUDE_DIR) -I$(SRC_DIR) -Wall -Wextra -Wno-unused-parameter
 
 BISON_FLAGS := -d      # <- GERA o parser.tab.h
 FLEX_FLAGS  :=
@@ -54,10 +62,11 @@ endif
 .PHONY: all build run test clean
 
 all: $(EXEC)
+build: $(EXEC)
 
 # Regra para gerar o executável: depende dos arquivos gerados por Bison e Flex
-$(EXEC): $(BISON_C) $(FLEX_C) $(AST_SRCS) $(MAIN_SRC)
-	$(CC) $(CFLAGS) -o $@ $(BISON_C) $(FLEX_C) $(AST_SRCS) $(MAIN_SRC) $(LDFLAGS)
+$(EXEC): $(BISON_C) $(FLEX_C) $(AST_SRCS) $(SEMANTIC_SRCS) $(MAIN_SRC)
+	$(CC) $(CFLAGS) -o $@ $(BISON_C) $(FLEX_C) $(AST_SRCS) $(SEMANTIC_SRCS) $(MAIN_SRC) $(LDFLAGS)
 
 # Regra para rodar o Bison: gera parser.tab.c e parser.tab.h
 $(BISON_C) $(BISON_H): $(BISON_FILE)

@@ -25,6 +25,13 @@ extern Node *g_program_ast;
 extern int   g_parse_errors;
 
 /* -------------------------------------------------------------------------- */
+/* Escopo global (definido em parser.y)                                       */
+/* -------------------------------------------------------------------------- */
+extern void push_scope(void);
+extern void pop_scope(void);
+extern void *scope_stack;
+
+/* -------------------------------------------------------------------------- */
 /* Função utilitária: exibe uso do programa                                   */
 /* -------------------------------------------------------------------------- */
 /**
@@ -80,6 +87,7 @@ int main(int argc, char **argv) {
     /* ---------------------------------------------------------------------- */
     g_program_ast = NULL;
     g_parse_errors = 0;
+    push_scope();
 
     /* ---------------------------------------------------------------------- */
     /* Etapa 3: Execução da análise sintática                                 */
@@ -88,6 +96,10 @@ int main(int argc, char **argv) {
 
     if (yyin && yyin != stdin)
         fclose(yyin);
+
+    while (scope_stack) {
+        pop_scope();
+    }
 
     /* ---------------------------------------------------------------------- */
     /* Etapa 4: Tratamento de erros sintáticos                                */
