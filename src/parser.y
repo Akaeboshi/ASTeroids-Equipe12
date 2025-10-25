@@ -74,12 +74,17 @@ bool insert_variable(const char *name, Node *value) {
 }
 %}
 
+%code requires {
+  #include "ast_base.h"
+}
+
 %union {
     struct Node* node;
     int intValue;
     double floatValue;
     int boolValue;
     char *str;
+    TypeTag typeTag;
 }
 
 %token <intValue> INT_LIT
@@ -87,6 +92,11 @@ bool insert_variable(const char *name, Node *value) {
 %token <boolValue> BOOL_LIT
 %token <str> IDENT
 %token <str> STRING_LIT
+
+%token KW_INT
+%token KW_FLOAT
+%token KW_BOOL
+%token KW_STRING
 
 %token LPAREN RPAREN LBRACE RBRACE
 %token PLUS MINUS TIMES DIVIDE
@@ -113,10 +123,12 @@ bool insert_variable(const char *name, Node *value) {
 /* Habilita mensagens de erro detalhadas */
 %define parse.error verbose
 
-%type <node> Program StmtList Stmt Block IfStmt WhileStmt ForStmt
-%type <node> FunctionDef ParamList ArgList
-%type <node> Expr OrExpr AndExpr EqExpr RelExpr AddExpr MulExpr Unary Primary
-%type <node> Num AssignExpr
+%type <typeTag> TypeTag
+%type <node>    Program StmtList Stmt Block IfStmt WhileStmt ForStmt
+%type <node>    FunctionDef ParamList ArgList
+%type <node>    Expr OrExpr AndExpr EqExpr RelExpr AddExpr MulExpr Unary Primary
+%type <node>    Num AssignExpr
+%type <node>    Decl
 
 %start Program
 
@@ -133,6 +145,7 @@ StmtList
 
 Stmt
     : Expr SEMICOLON                        { $$ = ast_expr($1); }
+    | Decl                                  { $$ = $1; }
     | Block                                 { $$ = $1; }
     | IfStmt                                { $$ = $1; }
     | WhileStmt                             { $$ = NULL; }
@@ -145,14 +158,34 @@ Stmt
     ;
 
 Block
-    : LBRACE              { push_scope(); }
+    : LBRACE                                { push_scope(); }
       StmtList
-      RBRACE              { pop_scope(); $$ = $3; }
+      RBRACE                                { pop_scope(); $$ = $3; }
     ;
 
+TypeTag
+  : KW_INT                                  { $$ = TY_INT; }
+  | KW_FLOAT                                { $$ = TY_FLOAT; }
+  | KW_BOOL                                 { $$ = TY_BOOL; }
+  | KW_STRING                               { $$ = TY_STRING; }
+  ;
+
+Decl
+  : TypeTag IDENT ASSIGN Expr SEMICOLON     {
+                                                $$ = ast_decl($1, $2, $4);
+                                                insert_variable($2, ast_copy($4));
+                                                free($2);
+                                            }
+  | TypeTag IDENT SEMICOLON                 {
+                                                $$ = ast_decl($1, $2, NULL);
+                                                insert_variable($2, ast_int(0));
+                                                free($2);
+                                            }
+  ;
+
 IfStmt
-  : IF LPAREN Expr RPAREN Stmt %prec IFX   { $$ = ast_if($3, $5, NULL); }
-  | IF LPAREN Expr RPAREN Stmt ELSE Stmt   { $$ = ast_if($3, $5, $7);   }
+  : IF LPAREN Expr RPAREN Stmt %prec IFX    { $$ = ast_if($3, $5, NULL); }
+  | IF LPAREN Expr RPAREN Stmt ELSE Stmt    { $$ = ast_if($3, $5, $7);   }
   ;
 
 WhileStmt

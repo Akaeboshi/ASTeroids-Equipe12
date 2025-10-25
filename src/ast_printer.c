@@ -60,35 +60,52 @@ static void print (const Node *node) {
     print(node -> u.as_binary.right);
     printf(")");
     break;
-    case ND_BLOCK:
-    printf("{ ");
+  case ND_BLOCK:
+  printf("{ ");
 
-    for (size_t i = 0; i < node -> u.as_block.count; i++){
-      print(node -> u.as_block.stmts[i]);
-      if (i + 1 < node -> u.as_block.count) printf(" ");
-    }
+  for (size_t i = 0; i < node -> u.as_block.count; i++){
+    print(node -> u.as_block.stmts[i]);
+    if (i + 1 < node -> u.as_block.count) printf(" ");
+  }
 
-    printf(" }");
+  printf(" }");
+  break;
+  case ND_ASSIGN:
+    printf("(%s = ", node -> u.as_assign.name);
+    print(node -> u.as_assign.value);
+    printf(")");
     break;
-    case ND_ASSIGN:
-      printf("(%s = ", node -> u.as_assign.name);
-      print(node -> u.as_assign.value);
-      printf(")");
+  case ND_EXPR:
+    print(node -> u.as_expr.expr);
+    printf(";");
+    break;
+  case ND_IF:
+      printf("if (");
+      print(node -> u.as_if.cond);
+      printf(") ");
+      print(node -> u.as_if.then_branch);
+      if (node -> u.as_if.else_branch) {
+        printf(" else ");
+        print(node -> u.as_if.else_branch);
+      }
       break;
-    case ND_EXPR:
-      print(node -> u.as_expr.expr);
-      printf(";");
+    case ND_DECL: {
+      const char *ts = "?";
+      switch (node->u.as_decl.type) {
+        case TY_INT: ts = "int"; break;
+        case TY_FLOAT: ts = "float"; break;
+        case TY_BOOL: ts = "bool"; break;
+        case TY_STRING: ts = "string"; break;
+      }
+
+      if (node->u.as_decl.init) {
+        printf("%s %s = ", ts, node->u.as_decl.name);
+        print(node->u.as_decl.init);
+      } else {
+        printf("%s %s", ts, node->u.as_decl.name);
+      }
       break;
-    case ND_IF:
-        printf("if (");
-        print(node -> u.as_if.cond);
-        printf(") ");
-        print(node -> u.as_if.then_branch);
-        if (node -> u.as_if.else_branch) {
-          printf(" else ");
-          print(node -> u.as_if.else_branch);
-        }
-        break;
+    }
   }
 }
 
@@ -137,25 +154,41 @@ static void print_pretty(const Node *node, int depth) {
         print_pretty(node -> u.as_block.stmts[i], depth + 2);
       }
       break;
-      case ND_ASSIGN:
-        printf("Assign(%s)\n", node -> u.as_assign.name);
-        print_pretty(node -> u.as_assign.value, depth + 2);
-        break;
-      case ND_EXPR:
-        printf("Expression\n");
-        print_pretty(node -> u.as_expr.expr, depth + 2);
-        break;
-      case ND_IF:
-        printf("If\n");
-        printf("  Cond:\n");
-        print_pretty(node->u.as_if.cond, depth + 4);
-        printf("  Then:\n");
-        print_pretty(node->u.as_if.then_branch, depth + 4);
-        if (node->u.as_if.else_branch) {
-          printf("  Else:\n");
-          print_pretty(node->u.as_if.else_branch, depth + 4);
-        }
-        break;
+    case ND_ASSIGN:
+      printf("Assign(%s)\n", node -> u.as_assign.name);
+      print_pretty(node -> u.as_assign.value, depth + 2);
+      break;
+    case ND_EXPR:
+      printf("Expression\n");
+      print_pretty(node -> u.as_expr.expr, depth + 2);
+      break;
+    case ND_IF:
+      printf("If\n");
+      printf("  Cond:\n");
+      print_pretty(node->u.as_if.cond, depth + 4);
+      printf("  Then:\n");
+      print_pretty(node->u.as_if.then_branch, depth + 4);
+      if (node->u.as_if.else_branch) {
+        printf("  Else:\n");
+        print_pretty(node->u.as_if.else_branch, depth + 4);
+      }
+      break;
+    case ND_DECL: {
+      const char *ts = "?";
+      switch (node->u.as_decl.type) {
+        case TY_INT: ts = "int"; break;
+        case TY_FLOAT: ts = "float"; break;
+        case TY_BOOL: ts = "bool"; break;
+        case TY_STRING: ts = "string"; break;
+      }
+      printf("Decl(%s %s)\n", ts, node->u.as_decl.name);
+      if (node->u.as_decl.init) {
+        for (int i=0;i<depth+2;i++) putchar(' ');
+        printf("Init:\n");
+        print_pretty(node->u.as_decl.init, depth+4);
+      }
+      break;
+    }
   }
 }
 

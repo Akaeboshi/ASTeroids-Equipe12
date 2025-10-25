@@ -48,13 +48,22 @@ static char *unescape_string(const char *src) {
 "true"                  { yylval.boolValue = 1; ADVANCE_COLUMN; return BOOL_LIT; } /* booleanos */
 "false"                 { yylval.boolValue = 0; ADVANCE_COLUMN; return BOOL_LIT; }
 
-[0-9]+\.[0-9]+([eE][-+]?[0-9]+)?   { yylval.floatValue = strtod(yytext, NULL); ADVANCE_COLUMN; return FLOAT_LIT; } /* float */
+"int"                   { ADVANCE_COLUMN; return KW_INT; }
+"float"                 { ADVANCE_COLUMN; return KW_FLOAT; }
+"bool"                  { ADVANCE_COLUMN; return KW_BOOL; }
+"string"                { ADVANCE_COLUMN; return KW_STRING; }
+
+[0-9]+\.[0-9]+([eE][-+]?[0-9]+)? {
+                                    yylval.floatValue = strtod(yytext, NULL);
+                                    ADVANCE_COLUMN; return FLOAT_LIT;
+                                 } /* float */
+
 [0-9]+                  { yylval.intValue = atoi(yytext); ADVANCE_COLUMN; return INT_LIT; } /* inteiro */
 
 \"([^\\\n]|(\\.))*\"    {
                           // Processa string com escapes
                           char *str = (char*)malloc(yyleng); // Aloca espaço suficiente
-                          int str_index = 0;
+                          size_t str_index = 0;
                           size_t text_index = 1; // Pula a aspas inicial
                           size_t end = (size_t)yyleng - 1; // Posição da aspas final
 
@@ -89,6 +98,8 @@ static char *unescape_string(const char *src) {
                           // Realoca para o tamanho exato
                           char *final_str = realloc(str, str_index + 1);
                           yylval.str = final_str ? final_str : str;
+
+                          ADVANCE_COLUMN;
                           return STRING_LIT;
                         }
 

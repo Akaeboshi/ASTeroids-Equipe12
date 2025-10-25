@@ -97,3 +97,11 @@ Node *ast_if(Node *cond, Node *then_branch, Node *else_branch) {
   node -> u.as_if.else_branch = else_branch;
   return node;
 }
+
+Node *ast_decl(TypeTag type, const char *name, Node *init) {
+  Node *n = new_node(ND_DECL);
+  n->u.as_decl.type = type;
+  n->u.as_decl.name = xstrdup(name);
+  n->u.as_decl.init = init;
+  return n;
+}
