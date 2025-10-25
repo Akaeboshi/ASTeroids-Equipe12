@@ -14,32 +14,52 @@ extern int g_parse_errors;   /* contador do parser.y */
 int yycolumn = 1; /* coluna atual - inicializada em 1 no driver */
 #define ADVANCE_COLUMN (yycolumn += yyleng) /* macro para avançar a coluna */
 
-/* Função simples para transformar sequências de escape em caracteres reais */
-static char *unescape_string(const char *src) {
-    size_t sl = strlen(src);
-    char *out = malloc(sl + 1);
-    if (!out) return NULL;
-    size_t i = 0, j = 0;
-    while (src[i]) {
-        if (src[i] == '\\') {
-            i++;
-            if (!src[i]) break;
-            switch (src[i]) {
-                case 'n': out[j++] = '\n'; break;
-                case 't': out[j++] = '\t'; break;
-                case 'r': out[j++] = '\r'; break;
-                case '\\': out[j++] = '\\'; break;
-                case '"': out[j++] = '"'; break;
-                case '\'': out[j++] = '\''; break;
-                default: out[j++] = src[i]; break;
+/* * Processa um literal de string (yytext)
+ * - Remove as aspas do início e do fim
+ * - Processa as sequências de escape
+ * - Retorna uma string alocada (deve ser liberada depois)
+ */
+static char* process_string_literal(const char* text, int len) {
+    // Aloca espaço suficiente (nunca será maior que o original)
+    char *str = (char*)malloc(len); 
+    if (!str) return NULL; // Falha de alocação
+
+    int str_index = 0;
+    size_t text_index = 1; // Pula a aspa inicial
+    size_t end = (size_t)len - 1; // Posição da aspa final
+
+    while (text_index < end) { // Para antes da aspa final
+        if (text[text_index] == '\\') {
+            text_index++; // Pula a barra
+            if (text_index >= end) break; // String termina em barra
+
+            switch (text[text_index]) {
+                case 'n': str[str_index++] = '\n'; break;
+                case 't': str[str_index++] = '\t'; break;
+                case 'r': str[str_index++] = '\r'; break;
+                case 'b': str[str_index++] = '\b'; break;
+                case 'f': str[str_index++] = '\f'; break;
+                case 'v': str[str_index++] = '\v'; break;
+                case '\\': str[str_index++] = '\\'; break;
+                case '\"': str[str_index++] = '\"'; break;
+                case '\'': str[str_index++] = '\''; break;
+                case '0': str[str_index++] = '\0'; break;
+                default:
+                    // Se não for um escape reconhecido, mantém a barra e o caractere
+                    str[str_index++] = '\\';
+                    str[str_index++] = text[text_index];
+                    break;
             }
-            i++;
         } else {
-            out[j++] = src[i++];
+            str[str_index++] = text[text_index];
         }
+        text_index++;
     }
-    out[j] = '\0';
-    return out;
+    str[str_index] = '\0'; // Terminador nulo
+
+    // Realoca para o tamanho exato para economizar memória
+    char *final_str = realloc(str, str_index + 1);
+    return final_str ? final_str : str; // Retorna o ponteiro (original ou reallocado)
 }
 %}
 
@@ -49,48 +69,18 @@ static char *unescape_string(const char *src) {
 "false"                 { yylval.boolValue = 0; ADVANCE_COLUMN; return BOOL_LIT; }
 
 [0-9]+\.[0-9]+([eE][-+]?[0-9]+)?   { yylval.floatValue = strtod(yytext, NULL); ADVANCE_COLUMN; return FLOAT_LIT; } /* float */
-[0-9]+                  { yylval.intValue = atoi(yytext); ADVANCE_COLUMN; return INT_LIT; } /* inteiro */
+[0-9]+              { 
+                        /* Use strtol(texto, NULL, base=10) */
+                        yylval.intValue = (int)strtol(yytext, NULL, 10); 
+                        ADVANCE_COLUMN; 
+                        return INT_LIT; 
+                    } /* inteiro */
 
-\"([^\\\n]|(\\.))*\"    {
-                          // Processa string com escapes
-                          char *str = (char*)malloc(yyleng); // Aloca espaço suficiente
-                          int str_index = 0;
-                          size_t text_index = 1; // Pula a aspas inicial
-                          size_t end = (size_t)yyleng - 1; // Posição da aspas final
-
-                          while (text_index < end) { // Para antes da aspas final
-                              if (yytext[text_index] == '\\') {
-                                // Sequência de escape
-                                text_index++;
-                                switch (yytext[text_index]) {
-                                    case 'n': str[str_index++] = '\n'; break;
-                                    case 't': str[str_index++] = '\t'; break;
-                                    case 'r': str[str_index++] = '\r'; break;
-                                    case 'b': str[str_index++] = '\b'; break;
-                                    case 'f': str[str_index++] = '\f'; break;
-                                    case 'v': str[str_index++] = '\v'; break;
-                                    case '\\': str[str_index++] = '\\'; break;
-                                    case '\"': str[str_index++] = '\"'; break;
-                                    case '\'': str[str_index++] = '\''; break;
-                                    case '0': str[str_index++] = '\0'; break;
-                                    default:
-                                        // Se não for um escape reconhecido, mantém o caractere
-                                        str[str_index++] = '\\';
-                                        str[str_index++] = yytext[text_index];
-                                        break;
-                                }
-                              } else {
-                                str[str_index++] = yytext[text_index];
-                              }
-                              text_index++;
-                          }
-                          str[str_index] = '\0';
-
-                          // Realoca para o tamanho exato
-                          char *final_str = realloc(str, str_index + 1);
-                          yylval.str = final_str ? final_str : str;
-                          return STRING_LIT;
-                        }
+\"([^\\\n]|(\\.))*\"   { 
+                        yylval.str = process_string_literal(yytext, yyleng); 
+                        ADVANCE_COLUMN; 
+                        return STRING_LIT; 
+                       }
 
 "if"                    { ADVANCE_COLUMN; return IF; } /* palavras-chave */
 "else"                  { ADVANCE_COLUMN; return ELSE; }
