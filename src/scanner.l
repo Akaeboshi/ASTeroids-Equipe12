@@ -31,7 +31,7 @@ static char* process_string_literal(const char* text, int len) {
     while (text_index < end) { // Para antes da aspa final
         if (text[text_index] == '\\') {
             text_index++; // Pula a barra
-            if (text_index >= end) break; // String termina em \
+            if (text_index >= end) break; // String termina em barra
 
             switch (text[text_index]) {
                 case 'n': str[str_index++] = '\n'; break;
