@@ -1,0 +1,17 @@
+Block
+  Decl(int a)
+    Init:
+      Int(10)
+  Decl(float x)
+  Expression
+    Assign(x)
+      Binary(*)
+        Float(3)
+        Binary(+)
+          Int(2)
+          Int(1)
+  Expression
+    Assign(a)
+      Binary(-)
+        Ident(a)
+        Int(4)

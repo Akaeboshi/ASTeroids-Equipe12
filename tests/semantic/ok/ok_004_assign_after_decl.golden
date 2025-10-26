@@ -1,0 +1,7 @@
+Block
+  Decl(int a)
+  Expression
+    Assign(a)
+      Binary(+)
+        Int(3)
+        Int(4)
