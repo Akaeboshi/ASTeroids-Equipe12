@@ -1,1 +1,1 @@
-if (1) { int k = 2; } else { int z; }
+if (true) { int k = 2; } else { int z; }
