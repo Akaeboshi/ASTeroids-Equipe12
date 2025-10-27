@@ -8,6 +8,7 @@
 
 typedef struct Symbol {
     char *name;
+    TypeTag type;
     Node *value;
     struct Symbol *next;
 } Symbol;
@@ -26,7 +27,7 @@ SymbolTable* st_create(void);
 void st_destroy(SymbolTable *table);
 
 // Insere um símbolo na tabela (sobrescreve se existir)
-bool st_insert(SymbolTable *table, const char *name, Node *value);
+bool st_insert(SymbolTable *table, const char *name, TypeTag type, Node *value);
 
 // Busca um símbolo na tabela (apenas no escopo atual)
 Node* st_lookup(SymbolTable *table, const char *name);
@@ -39,6 +40,18 @@ bool st_remove(SymbolTable *table, const char *name);
 
 // Debug: imprime toda a tabela
 void st_print(SymbolTable *table);
+
+// Atualiza o valor de um símbolo existente no escopo atual
+bool st_update(SymbolTable *table, const char *name, Node *new_value);
+
+// Atualiza o valor de um símbolo existente recursivamente
+bool st_update_recursive(SymbolTable *table, const char *name, Node *new_value);
+
+// Busca o tipo de um símbolo no escopo atual
+TypeTag st_lookup_type(SymbolTable *table, const char *name, bool *found);
+
+// Busca recursiva o tipo de um símbolo em todos os escopos
+TypeTag st_lookup_type_recursive(SymbolTable *table, const char *name, bool *found);
 
 /* Helper Functions */
 void *xmalloc(size_t size);
