@@ -95,7 +95,7 @@ static TypeTag infer_type(Node *n) {
         return t;
       }
 
-      case ND_UNARY:{
+      case ND_UNARY: {
           TypeTag T = infer_type(n->u.as_unary.expr);
           if (T == TY_INVALID) return TY_INVALID;
           if (n->u.as_unary.op == UN_NEG) return (T == TY_INT || T == TY_FLOAT) ? T : TY_INVALID;
@@ -105,42 +105,42 @@ static TypeTag infer_type(Node *n) {
       }
 
       case ND_BINARY: {
-          TypeTag L = infer_type(n->u.as_binary.left);
-          TypeTag R = infer_type(n->u.as_binary.right);
+        TypeTag L = infer_type(n->u.as_binary.left);
+        TypeTag R = infer_type(n->u.as_binary.right);
 
-          if (L == TY_INVALID || R == TY_INVALID) return TY_INVALID;
+        if (L == TY_INVALID || R == TY_INVALID) return TY_INVALID;
 
-          switch (n->u.as_binary.op) {
-              // Aritméticos -> int/float (promoção simples)
-              case BIN_ADD: case BIN_SUB: case BIN_MUL:
-                  if (L == TY_BOOL || L == TY_STRING || R == TY_BOOL || R == TY_STRING)
-                      return TY_INVALID;
-                  if (L == TY_FLOAT || R == TY_FLOAT)
-                      return TY_FLOAT;
-                  return TY_INT;
+        switch (n->u.as_binary.op) {
+          // Aritméticos -> int/float (promoção simples)
+          case BIN_ADD: case BIN_SUB: case BIN_MUL:
+            if (L == TY_BOOL || L == TY_STRING || R == TY_BOOL || R == TY_STRING)
+              return TY_INVALID;
+            if (L == TY_FLOAT || R == TY_FLOAT)
+              return TY_FLOAT;
+            return TY_INT;
 
-              case BIN_DIV:
-                  if (L == TY_BOOL || L == TY_STRING || R == TY_BOOL || R == TY_STRING)
-                      return TY_INVALID;
-                  return TY_FLOAT;
+          case BIN_DIV:
+            if (L == TY_BOOL || L == TY_STRING || R == TY_BOOL || R == TY_STRING)
+              return TY_INVALID;
+            return TY_FLOAT;
 
-              // Comparações/igualdade -> bool
-              case BIN_LT: case BIN_LE: case BIN_GT: case BIN_GE:
-              case BIN_EQ: case BIN_NEQ:
-                  if (L == TY_INVALID || R == TY_INVALID) return TY_INVALID;
-                  if (L != R) return TY_INVALID;
-                  return TY_BOOL;
+          // Comparações/igualdade -> bool
+          case BIN_LT: case BIN_LE: case BIN_GT: case BIN_GE:
+          case BIN_EQ: case BIN_NEQ:
+            if (L == TY_INVALID || R == TY_INVALID) return TY_INVALID;
+            if (L != R) return TY_INVALID;
+            return TY_BOOL;
 
-              // Lógicos -> bool
-              case BIN_AND: case BIN_OR:
-                  return (L == TY_BOOL && R == TY_BOOL) ? TY_BOOL : TY_INVALID;
+          // Lógicos -> bool
+          case BIN_AND: case BIN_OR:
+            return (L == TY_BOOL && R == TY_BOOL) ? TY_BOOL : TY_INVALID;
 
-          }
-          return TY_INVALID;
+        }
+        return TY_INVALID;
       }
 
       case ND_ASSIGN:
-          return infer_type(n->u.as_assign.value);
+        return infer_type(n->u.as_assign.value);
 
       default:
         return TY_INVALID;

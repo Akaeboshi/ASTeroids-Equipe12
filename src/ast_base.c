@@ -69,7 +69,7 @@ Node *ast_copy(Node *node) {
         case ND_DECL:
           copy->u.as_decl.type = node->u.as_decl.type;
           copy->u.as_decl.name = xstrdup(node->u.as_decl.name);
-          copy->u.as_decl.init = ast_copy(node->u.as_decl.init);
+          copy->u.as_decl.init = node->u.as_decl.init ? ast_copy(node->u.as_decl.init) : NULL;
           break;
     }
     return copy;

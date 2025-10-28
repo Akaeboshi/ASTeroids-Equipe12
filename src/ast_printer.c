@@ -178,7 +178,7 @@ static void print_pretty(const Node *node, int depth) {
     case ND_DECL: {
       printf("Decl(%s %s)\n", type_to_string(node->u.as_decl.type), node->u.as_decl.name);
       if (node->u.as_decl.init) {
-        for (int i=0;i<depth+2;i++) putchar(' ');
+        for (int i = 0; i < depth + 2; i++) putchar(' ');
         printf("Init:\n");
         print_pretty(node->u.as_decl.init, depth+4);
       }

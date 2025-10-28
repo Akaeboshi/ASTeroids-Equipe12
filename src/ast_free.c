@@ -44,7 +44,7 @@ void ast_free(Node *node) {
         break;
       case ND_DECL:
         free(node->u.as_decl.name);
-        ast_free(node->u.as_decl.init);
+        if (node->u.as_decl.init) ast_free(node->u.as_decl.init);
         break;
   }
 
