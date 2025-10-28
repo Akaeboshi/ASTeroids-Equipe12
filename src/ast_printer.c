@@ -28,6 +28,16 @@ static const char *unop_to_str(UnOp op) {
   }
 }
 
+static const char *type_to_string(TypeTag type) {
+    switch (type) {
+        case TY_INT:    return "int";
+        case TY_FLOAT:  return "float";
+        case TY_BOOL:   return "bool";
+        case TY_STRING: return "string";
+        default:        return "<invalid>";
+    }
+}
+
 static void print (const Node *node) {
   if(!node) { printf("NULL"); return; }
 
@@ -90,19 +100,11 @@ static void print (const Node *node) {
       }
       break;
     case ND_DECL: {
-      const char *ts = "?";
-      switch (node->u.as_decl.type) {
-        case TY_INT: ts = "int"; break;
-        case TY_FLOAT: ts = "float"; break;
-        case TY_BOOL: ts = "bool"; break;
-        case TY_STRING: ts = "string"; break;
-      }
-
       if (node->u.as_decl.init) {
-        printf("%s %s = ", ts, node->u.as_decl.name);
+        printf("%s %s = ", type_to_string(node->u.as_decl.type), node->u.as_decl.name);
         print(node->u.as_decl.init);
       } else {
-        printf("%s %s", ts, node->u.as_decl.name);
+        printf("%s %s", type_to_string(node->u.as_decl.type), node->u.as_decl.name);
       }
       break;
     }
@@ -174,14 +176,7 @@ static void print_pretty(const Node *node, int depth) {
       }
       break;
     case ND_DECL: {
-      const char *ts = "?";
-      switch (node->u.as_decl.type) {
-        case TY_INT: ts = "int"; break;
-        case TY_FLOAT: ts = "float"; break;
-        case TY_BOOL: ts = "bool"; break;
-        case TY_STRING: ts = "string"; break;
-      }
-      printf("Decl(%s %s)\n", ts, node->u.as_decl.name);
+      printf("Decl(%s %s)\n", type_to_string(node->u.as_decl.type), node->u.as_decl.name);
       if (node->u.as_decl.init) {
         for (int i=0;i<depth+2;i++) putchar(' ');
         printf("Init:\n");

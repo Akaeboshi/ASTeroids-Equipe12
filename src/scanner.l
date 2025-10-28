@@ -63,7 +63,7 @@ static char *unescape_string(const char *src) {
 \"([^\\\n]|(\\.))*\"    {
                           // Processa string com escapes
                           char *str = (char*)malloc(yyleng); // Aloca espaço suficiente
-                          size_t str_index = 0;
+                          size_t output_index = 0;
                           size_t text_index = 1; // Pula a aspas inicial
                           size_t end = (size_t)yyleng - 1; // Posição da aspas final
 
@@ -72,31 +72,31 @@ static char *unescape_string(const char *src) {
                                 // Sequência de escape
                                 text_index++;
                                 switch (yytext[text_index]) {
-                                    case 'n': str[str_index++] = '\n'; break;
-                                    case 't': str[str_index++] = '\t'; break;
-                                    case 'r': str[str_index++] = '\r'; break;
-                                    case 'b': str[str_index++] = '\b'; break;
-                                    case 'f': str[str_index++] = '\f'; break;
-                                    case 'v': str[str_index++] = '\v'; break;
-                                    case '\\': str[str_index++] = '\\'; break;
-                                    case '\"': str[str_index++] = '\"'; break;
-                                    case '\'': str[str_index++] = '\''; break;
-                                    case '0': str[str_index++] = '\0'; break;
+                                    case 'n': str[output_index++] = '\n'; break;
+                                    case 't': str[output_index++] = '\t'; break;
+                                    case 'r': str[output_index++] = '\r'; break;
+                                    case 'b': str[output_index++] = '\b'; break;
+                                    case 'f': str[output_index++] = '\f'; break;
+                                    case 'v': str[output_index++] = '\v'; break;
+                                    case '\\': str[output_index++] = '\\'; break;
+                                    case '\"': str[output_index++] = '\"'; break;
+                                    case '\'': str[output_index++] = '\''; break;
+                                    case '0': str[output_index++] = '\0'; break;
                                     default:
                                         // Se não for um escape reconhecido, mantém o caractere
-                                        str[str_index++] = '\\';
-                                        str[str_index++] = yytext[text_index];
+                                        str[output_index++] = '\\';
+                                        str[output_index++] = yytext[text_index];
                                         break;
                                 }
                               } else {
-                                str[str_index++] = yytext[text_index];
+                                str[output_index++] = yytext[text_index];
                               }
                               text_index++;
                           }
-                          str[str_index] = '\0';
+                          str[output_index] = '\0';
 
                           // Realoca para o tamanho exato
-                          char *final_str = realloc(str, str_index + 1);
+                          char *final_str = realloc(str, output_index + 1);
                           yylval.str = final_str ? final_str : str;
 
                           ADVANCE_COLUMN;

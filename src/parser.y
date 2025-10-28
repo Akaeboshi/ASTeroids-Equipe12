@@ -86,37 +86,74 @@ static TypeTag infer_type(Node *n) {
       case ND_IDENT: {
         bool ok = false;
         TypeTag t = st_lookup_type_recursive(current_scope(), n->u.as_ident.name, &ok);
-        return ok ? t : TY_INT; // fallback neutro (idealmente reportar erro em uso não declarado)
+        if (!ok) {
+            fprintf(stderr,
+                    "Erro semântico: identificador '%s' não declarado (linha %d)\n",
+                    n->u.as_ident.name, yylineno);
+            return TY_INVALID;
+        }
+        return t;
       }
 
-      case ND_UNARY:
-        if (n->u.as_unary.op == UN_NEG) return infer_type(n->u.as_unary.expr);
-        if (n->u.as_unary.op == UN_NOT) return TY_BOOL;
-        return infer_type(n->u.as_unary.expr);
+      case ND_UNARY:{
+          TypeTag T = infer_type(n->u.as_unary.expr);
+          if (T == TY_INVALID) return TY_INVALID;
+          if (n->u.as_unary.op == UN_NEG) return (T == TY_INT || T == TY_FLOAT) ? T : TY_INVALID;
+          if (n->u.as_unary.op == UN_NOT) return TY_BOOL;
+
+          return T;
+      }
 
       case ND_BINARY: {
-        TypeTag L = infer_type(n->u.as_binary.left);
-        TypeTag R = infer_type(n->u.as_binary.right);
+          TypeTag L = infer_type(n->u.as_binary.left);
+          TypeTag R = infer_type(n->u.as_binary.right);
 
-        switch (n->u.as_binary.op) {
-          // Aritméticos → int/float (promoção simples)
-          case BIN_ADD: case BIN_SUB: case BIN_MUL: case BIN_DIV:
-            if (L == TY_FLOAT || R == TY_FLOAT) return TY_FLOAT;
-            return TY_INT;
+          if (L == TY_INVALID || R == TY_INVALID) return TY_INVALID;
 
-          // Comparações/igualdade → bool
-          case BIN_LT: case BIN_LE: case BIN_GT: case BIN_GE:
-          case BIN_EQ: case BIN_NEQ:
-            return TY_BOOL;
+          switch (n->u.as_binary.op) {
+              // Aritméticos -> int/float (promoção simples)
+              case BIN_ADD: case BIN_SUB: case BIN_MUL:
+                  if (L == TY_BOOL || L == TY_STRING || R == TY_BOOL || R == TY_STRING)
+                      return TY_INVALID;
+                  if (L == TY_FLOAT || R == TY_FLOAT)
+                      return TY_FLOAT;
+                  return TY_INT;
 
-          // Lógicos → bool
-          case BIN_AND: case BIN_OR:
-            return TY_BOOL;
-        }
+              case BIN_DIV:
+                  if (L == TY_BOOL || L == TY_STRING || R == TY_BOOL || R == TY_STRING)
+                      return TY_INVALID;
+                  return TY_FLOAT;
+
+              // Comparações/igualdade -> bool
+              case BIN_LT: case BIN_LE: case BIN_GT: case BIN_GE:
+              case BIN_EQ: case BIN_NEQ:
+                  if (L == TY_INVALID || R == TY_INVALID) return TY_INVALID;
+                  if (L != R) return TY_INVALID;
+                  return TY_BOOL;
+
+              // Lógicos -> bool
+              case BIN_AND: case BIN_OR:
+                  return (L == TY_BOOL && R == TY_BOOL) ? TY_BOOL : TY_INVALID;
+
+          }
+          return TY_INVALID;
       }
 
+      case ND_ASSIGN:
+          return infer_type(n->u.as_assign.value);
+
       default:
-        return TY_INT; // fallback seguro mínimo
+        return TY_INVALID;
+    }
+}
+
+static Node *default_value_for(TypeTag t) {
+    switch (t) {
+        case TY_INT:    return ast_int(0);
+        case TY_FLOAT:  return ast_float(0.0);
+        case TY_BOOL:   return ast_bool(false);
+        case TY_STRING: return ast_string("");
+        case TY_INVALID: default: return ast_int(0);
     }
 }
 %}
@@ -241,8 +278,9 @@ Decl
                                                     yyerror("Erro semântico: variável já declarada neste escopo");
                                                     free($2); YYERROR;
                                                 }
+
                                                 $$ = ast_decl($1, $2, NULL);
-                                                insert_variable($2, $1, ast_int(0));
+                                                insert_variable($2, $1, default_value_for($1));
                                                 free($2);
                                             }
   ;
@@ -310,7 +348,8 @@ AssignExpr
                                                     ast_free($3); free($1); YYERROR;
                                                 }
 
-                                                if (!st_update_recursive(current_scope(), $1, ast_copy($3))) {
+                                                Node *right_expr = ($3 && $3->kind == ND_ASSIGN) ? $3->u.as_assign.value : $3;
+                                                if (!st_update_recursive(current_scope(), $1, ast_copy(right_expr))) {
                                                     yyerror("Erro semântico: falha ao atualizar variável");
                                                     ast_free($3); free($1); YYERROR;
                                                 }

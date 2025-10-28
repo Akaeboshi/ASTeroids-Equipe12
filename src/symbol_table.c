@@ -183,8 +183,11 @@ bool st_update_recursive(SymbolTable *table, const char *name, Node *new_value) 
 }
 
 TypeTag st_lookup_type(SymbolTable *table, const char *name, bool *found) {
+    if (!table || !name) {
+        if (found) *found = false;
+        return TY_INVALID;
+    }
     if (found) *found = false;
-    if (!table || !name) return (TypeTag)0;
     size_t index = hash(name, table->capacity);
     for (Symbol *cur = table->buckets[index]; cur; cur = cur->next) {
         if (strcmp(cur->name, name) == 0) {
@@ -192,7 +195,7 @@ TypeTag st_lookup_type(SymbolTable *table, const char *name, bool *found) {
             return cur->type;
         }
     }
-    return (TypeTag)0;
+    return TY_INVALID;
 }
 
 TypeTag st_lookup_type_recursive(SymbolTable *table, const char *name, bool *found) {
@@ -206,5 +209,5 @@ TypeTag st_lookup_type_recursive(SymbolTable *table, const char *name, bool *fou
             }
         }
     }
-    return TY_INT;
+    return TY_INVALID;
 }

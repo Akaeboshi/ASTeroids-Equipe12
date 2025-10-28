@@ -5,6 +5,7 @@
 #include <stddef.h>
 
 typedef enum {
+  TY_INVALID = 0,
   TY_INT,
   TY_FLOAT,
   TY_BOOL,
@@ -23,7 +24,7 @@ typedef enum {
   ND_ASSIGN,    // atribuição (identificador = expr)
   ND_EXPR,      // expressão genérica
   ND_IF,        // instrução if
-  ND_DECL,     // declaração de variável
+  ND_DECL,      // declaração de variável
 } NodeKind;
 
 typedef enum {
@@ -76,7 +77,6 @@ struct Node {
 void *xmalloc(size_t size);
 char *xstrdup(const char *s);
 struct Node *new_node(NodeKind kind);
-
 Node *ast_copy(Node *node);
 
 #endif /* AST_BASE_H */
