@@ -94,7 +94,7 @@ static char* process_string_literal(const char* text, int len) {
 "function"              { ADVANCE_COLUMN; return FUNCTION; }
 "return"                { ADVANCE_COLUMN; return RETURN; }
 
-[a-zA-Z_][a-zA-Z0-9_]*  { yylval.str = strdup(yytext); ADVANCE_COLUMN; return IDENT; } /* identificadores */
+[a-zA-Z_][a-zA-Z0-9_]*  { yylval.str = xstrdup(yytext); ADVANCE_COLUMN; return IDENT; } /* identificadores */
 
 [\t ]+                  { ADVANCE_COLUMN; } /* ignora tabs/espacos */
 \r\n                    { yycolumn = 1; }

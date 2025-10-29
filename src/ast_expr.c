@@ -105,3 +105,21 @@ Node *ast_decl(TypeTag type, const char *name, Node *init) {
   n->u.as_decl.init = init;
   return n;
 }
+
+Node *ast_while(Node *cond, Node *body) {
+    Node *n = xmalloc(sizeof(Node));
+    n->kind = ND_WHILE;
+    n->u.as_while.cond = cond;
+    n->u.as_while.body = body;
+    return n;
+}
+
+Node *ast_for(Node *init, Node *cond, Node *step, Node *body) {
+    Node *n = xmalloc(sizeof(Node));
+    n->kind = ND_FOR;
+    n->u.as_for.init = init;
+    n->u.as_for.cond = cond;
+    n->u.as_for.step = step;
+    n->u.as_for.body = body;
+    return n;
+}

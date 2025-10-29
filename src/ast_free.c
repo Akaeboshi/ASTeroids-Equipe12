@@ -46,6 +46,16 @@ void ast_free(Node *node) {
         free(node->u.as_decl.name);
         if (node->u.as_decl.init) ast_free(node->u.as_decl.init);
         break;
+      case ND_WHILE:
+        if (node->u.as_while.cond) ast_free(node->u.as_while.cond);
+        if (node->u.as_while.body) ast_free(node->u.as_while.body);
+        break;
+      case ND_FOR:
+        if (node->u.as_for.init) ast_free(node->u.as_for.init);
+        if (node->u.as_for.cond) ast_free(node->u.as_for.cond);
+        if (node->u.as_for.step) ast_free(node->u.as_for.step);
+        if (node->u.as_for.body) ast_free(node->u.as_for.body);
+        break;
   }
 
   free(node);

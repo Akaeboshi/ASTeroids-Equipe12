@@ -25,6 +25,8 @@ typedef enum {
   ND_EXPR,      // expressão genérica
   ND_IF,        // instrução if
   ND_DECL,      // declaração de variável
+  ND_WHILE,     // instrução while
+  ND_FOR,       // instrução for
 } NodeKind;
 
 typedef enum {
@@ -70,6 +72,8 @@ struct Node {
     struct { Node *expr; } as_expr;
     struct { Node *cond; Node *then_branch; Node *else_branch; } as_if;
     struct { TypeTag type; char *name; Node *init; } as_decl;
+    struct { Node *cond; Node *body; } as_while;
+    struct { Node *init; Node *cond; Node *step; Node *body; } as_for;
   } u;
 };
 
