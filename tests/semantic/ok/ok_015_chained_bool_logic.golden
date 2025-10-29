@@ -1,0 +1,16 @@
+Block
+  Decl(bool x)
+    Init:
+      Bool(true)
+  Decl(bool y)
+    Init:
+      Bool(false)
+  Decl(bool z)
+  Expression
+    Assign(z)
+      Binary(&&)
+        Ident(x)
+        Binary(||)
+          Ident(y)
+          Unary(!)
+            Ident(x)

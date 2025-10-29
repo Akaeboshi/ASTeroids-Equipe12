@@ -1,0 +1,13 @@
+Block
+  Decl(int x)
+    Init:
+      Unary(-)
+        Int(10)
+  Decl(float y)
+    Init:
+      Unary(-)
+        Float(2.5)
+  Decl(bool b)
+    Init:
+      Unary(!)
+        Bool(false)

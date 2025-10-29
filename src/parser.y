@@ -156,6 +156,8 @@ static Node *default_value_for(TypeTag t) {
         case TY_INVALID: default: return ast_int(0);
     }
 }
+
+static inline bool is_numeric(TypeTag t) { return t == TY_INT || t == TY_FLOAT; }
 %}
 
 %code requires {
@@ -343,7 +345,13 @@ AssignExpr
                                                 }
 
                                                 TypeTag inferred_type = infer_type($3);
-                                                if (inferred_type != var_type) {
+
+                                                bool compatible_types =
+                                                            (var_type == inferred_type) ||
+                                                            ((var_type == TY_INT || var_type == TY_FLOAT) &&
+                                                            (inferred_type == TY_INT || inferred_type == TY_FLOAT));
+
+                                                if (!compatible_types) {
                                                     yyerror("Erro semântico: tipos incompatíveis na atribuição");
                                                     ast_free($3); free($1); YYERROR;
                                                 }
