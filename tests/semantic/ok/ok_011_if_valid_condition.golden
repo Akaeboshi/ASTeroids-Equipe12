@@ -3,9 +3,9 @@ Block
     Init:
       Bool(true)
   If
-  Cond:
+    Cond:
       Ident(cond)
-  Then:
+    Then:
       Block
         Decl(int x)
           Init:

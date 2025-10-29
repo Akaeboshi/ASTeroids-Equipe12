@@ -1,0 +1,6 @@
+
+bool cond = true;
+int x = 0;
+if (cond) {
+  while (x < 2) { x = x + 1; }
+}

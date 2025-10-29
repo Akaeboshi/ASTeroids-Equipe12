@@ -1,0 +1,24 @@
+Block
+  Decl(bool cond)
+    Init:
+      Bool(true)
+  Decl(int x)
+    Init:
+      Int(0)
+  If
+    Cond:
+      Ident(cond)
+    Then:
+      Block
+        While
+          Cond:
+            Binary(<)
+              Ident(x)
+              Int(2)
+          Body:
+            Block
+              Expression
+                Assign(x)
+                  Binary(+)
+                    Ident(x)
+                    Int(1)
