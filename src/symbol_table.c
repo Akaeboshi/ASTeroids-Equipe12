@@ -46,7 +46,7 @@ void st_destroy(SymbolTable *table) {
     free(table);
 }
 
-bool st_insert(SymbolTable *table, const char *name, Node *value) {
+bool st_insert(SymbolTable *table, const char *name, TypeTag type, Node *value) {
     if (!table || !name) return false;
 
     size_t index = hash(name, table->capacity);
@@ -55,7 +55,8 @@ bool st_insert(SymbolTable *table, const char *name, Node *value) {
     // Verifica se já existe
     while (current) {
         if (strcmp(current->name, name) == 0) {
-            // Substitui o valor existente
+            // Atualiza tipo e valor existentes
+            current->type = type;
             ast_free(current->value);
             current->value = value;
             return true;
@@ -66,6 +67,7 @@ bool st_insert(SymbolTable *table, const char *name, Node *value) {
     // Cria novo símbolo
     Symbol *new_symbol = (Symbol*)xmalloc(sizeof(Symbol));
     new_symbol->name = xstrdup(name);
+    new_symbol->type = type;
     new_symbol->value = value;
     new_symbol->next = table->buckets[index];
     table->buckets[index] = new_symbol;
@@ -143,4 +145,69 @@ void st_print(SymbolTable *table) {
             printf("NULL\n");
         }
     }
+}
+
+bool st_update(SymbolTable *table, const char *name, Node *new_value) {
+    if (!table || !name) return false;
+    size_t index = hash(name, table->capacity);
+    for (Symbol *cur = table->buckets[index]; cur; cur = cur->next) {
+        if (strcmp(cur->name, name) == 0) {
+            ast_free(cur->value);
+            cur->value = new_value;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool st_update_recursive(SymbolTable *table, const char *name, Node *new_value) {
+    if (!table || !name) return false;
+
+    size_t index = hash(name, table->capacity);
+    Symbol *current = table->buckets[index];
+
+    while (current) {
+        if (strcmp(current->name, name) == 0) {
+            ast_free(current->value);
+            current->value = new_value;
+            return true;
+        }
+        current = current->next;
+    }
+
+    if (table->parent) {
+        return st_update_recursive(table->parent, name, new_value);
+    }
+
+    return false;
+}
+
+TypeTag st_lookup_type(SymbolTable *table, const char *name, bool *found) {
+    if (!table || !name) {
+        if (found) *found = false;
+        return TY_INVALID;
+    }
+    if (found) *found = false;
+    size_t index = hash(name, table->capacity);
+    for (Symbol *cur = table->buckets[index]; cur; cur = cur->next) {
+        if (strcmp(cur->name, name) == 0) {
+            if (found) *found = true;
+            return cur->type;
+        }
+    }
+    return TY_INVALID;
+}
+
+TypeTag st_lookup_type_recursive(SymbolTable *table, const char *name, bool *found) {
+    if (found) *found = false;
+    for (SymbolTable *t = table; t; t = t->parent) {
+        size_t index = hash(name, t->capacity);
+        for (Symbol *cur = t->buckets[index]; cur; cur = cur->next) {
+            if (strcmp(cur->name, name) == 0) {
+                if (found) *found = true;
+                return cur->type;
+            }
+        }
+    }
+    return TY_INVALID;
 }

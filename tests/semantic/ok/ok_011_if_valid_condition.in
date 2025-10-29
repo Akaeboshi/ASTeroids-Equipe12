@@ -1,0 +1,4 @@
+bool cond = true;
+if (cond) {
+  int x = 1;
+}

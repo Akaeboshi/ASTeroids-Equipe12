@@ -21,7 +21,7 @@ int yycolumn = 1; /* coluna atual - inicializada em 1 no driver */
  */
 static char* process_string_literal(const char* text, int len) {
     // Aloca espaço suficiente (nunca será maior que o original)
-    char *str = (char*)malloc(len); 
+    char *str = (char*)malloc(len);
     if (!str) return NULL; // Falha de alocação
 
     int str_index = 0;
@@ -68,18 +68,23 @@ static char* process_string_literal(const char* text, int len) {
 "true"                  { yylval.boolValue = 1; ADVANCE_COLUMN; return BOOL_LIT; } /* booleanos */
 "false"                 { yylval.boolValue = 0; ADVANCE_COLUMN; return BOOL_LIT; }
 
+"int"                   { ADVANCE_COLUMN; return KW_INT; }
+"float"                 { ADVANCE_COLUMN; return KW_FLOAT; }
+"bool"                  { ADVANCE_COLUMN; return KW_BOOL; }
+"string"                { ADVANCE_COLUMN; return KW_STRING; }
+
 [0-9]+\.[0-9]+([eE][-+]?[0-9]+)?   { yylval.floatValue = strtod(yytext, NULL); ADVANCE_COLUMN; return FLOAT_LIT; } /* float */
-[0-9]+              { 
+[0-9]+              {
                         /* Use strtol(texto, NULL, base=10) */
-                        yylval.intValue = (int)strtol(yytext, NULL, 10); 
-                        ADVANCE_COLUMN; 
-                        return INT_LIT; 
+                        yylval.intValue = (int)strtol(yytext, NULL, 10);
+                        ADVANCE_COLUMN;
+                        return INT_LIT;
                     } /* inteiro */
 
-\"([^\\\n]|(\\.))*\"   { 
-                        yylval.str = process_string_literal(yytext, yyleng); 
-                        ADVANCE_COLUMN; 
-                        return STRING_LIT; 
+\"([^\\\n]|(\\.))*\"   {
+                        yylval.str = process_string_literal(yytext, yyleng);
+                        ADVANCE_COLUMN;
+                        return STRING_LIT;
                        }
 
 "if"                    { ADVANCE_COLUMN; return IF; } /* palavras-chave */

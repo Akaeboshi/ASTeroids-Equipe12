@@ -1,0 +1,7 @@
+Block
+  Decl(int a)
+  Decl(float b)
+  Expression
+    Assign(a)
+      Assign(b)
+        Float(2.5)

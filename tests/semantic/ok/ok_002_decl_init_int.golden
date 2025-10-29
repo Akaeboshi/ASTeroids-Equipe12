@@ -1,0 +1,4 @@
+Block
+  Decl(int a)
+    Init:
+      Int(10)

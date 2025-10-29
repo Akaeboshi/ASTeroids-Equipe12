@@ -27,9 +27,11 @@ ScopeStack *scope_stack = NULL;
 void push_scope(void) {
     ScopeStack *new_scope = (ScopeStack*)xmalloc(sizeof(ScopeStack));
     new_scope->current = st_create();
+    new_scope->current->parent = scope_stack ? scope_stack->current : NULL;
     new_scope->next = scope_stack;
     scope_stack = new_scope;
-    printf("DEBUG: Escopo criado: %p\n", (void*)new_scope->current);
+    printf("DEBUG: Escopo criado: current=%p parent=%p\n",
+        (void*)new_scope->current, (void*)new_scope->current->parent);
 }
 
 void pop_scope(void) {
@@ -63,16 +65,102 @@ Node* lookup_variable(const char *name) {
 }
 
 // Insere no escopo atual
-bool insert_variable(const char *name, Node *value) {
+bool insert_variable(const char *name, TypeTag type, Node *value) {
     SymbolTable *scope = current_scope();
     if (!scope) {
         printf("DEBUG: ERRO - Nenhum escopo atual para inserir '%s'\n", name);
         return false;
     }
     printf("DEBUG: Inserindo variável '%s' no escopo %p\n", name, (void*)scope);
-    return st_insert(scope, name, value);
+    return st_insert(scope, name, type, value);
+}
+
+static inline bool is_numeric(TypeTag t) { return t == TY_INT || t == TY_FLOAT; }
+
+// Deduz o tipo produzido por uma expressão AST
+static TypeTag infer_type(Node *n) {
+    switch (n->kind) {
+      case ND_INT:    return TY_INT;
+      case ND_FLOAT:  return TY_FLOAT;
+      case ND_BOOL:   return TY_BOOL;
+      case ND_STRING: return TY_STRING;
+
+      case ND_IDENT: {
+        bool ok = false;
+        TypeTag t = st_lookup_type_recursive(current_scope(), n->u.as_ident.name, &ok);
+        if (!ok) {
+            fprintf(stderr,
+                    "Erro semântico: identificador '%s' não declarado (linha %d)\n",
+                    n->u.as_ident.name, yylineno);
+            return TY_INVALID;
+        }
+        return t;
+      }
+
+      case ND_UNARY: {
+          TypeTag T = infer_type(n->u.as_unary.expr);
+          if (T == TY_INVALID) return TY_INVALID;
+          if (n->u.as_unary.op == UN_NEG) return (T == TY_INT || T == TY_FLOAT) ? T : TY_INVALID;
+          if (n->u.as_unary.op == UN_NOT) return TY_BOOL;
+
+          return T;
+      }
+
+      case ND_BINARY: {
+        TypeTag L = infer_type(n->u.as_binary.left);
+        TypeTag R = infer_type(n->u.as_binary.right);
+
+        if (L == TY_INVALID || R == TY_INVALID) return TY_INVALID;
+
+        switch (n->u.as_binary.op) {
+          // Aritméticos -> int/float (promoção simples)
+          case BIN_ADD: case BIN_SUB: case BIN_MUL:
+            if (!is_numeric(L) || !is_numeric(R)) return TY_INVALID;
+            return (L == TY_FLOAT || R == TY_FLOAT) ? TY_FLOAT : TY_INT;
+
+          case BIN_DIV:
+            if (!is_numeric(L) || !is_numeric(R)) return TY_INVALID;
+            return TY_FLOAT;
+
+          // Comparações/igualdade -> bool
+          case BIN_LT: case BIN_LE: case BIN_GT: case BIN_GE:
+            return (is_numeric(L) && is_numeric(R)) ? TY_BOOL : TY_INVALID;
+          case BIN_EQ: case BIN_NEQ:
+            if (is_numeric(L) && is_numeric(R))   return TY_BOOL;
+            if (L == TY_BOOL   && R == TY_BOOL)   return TY_BOOL;
+            if (L == TY_STRING && R == TY_STRING) return TY_BOOL;
+            return TY_INVALID;
+
+          // Lógicos -> bool
+          case BIN_AND: case BIN_OR:
+            return (L == TY_BOOL && R == TY_BOOL) ? TY_BOOL : TY_INVALID;
+
+        }
+        return TY_INVALID;
+      }
+
+      case ND_ASSIGN:
+        return infer_type(n->u.as_assign.value);
+
+      default:
+        return TY_INVALID;
+    }
+}
+
+static Node *default_value_for(TypeTag t) {
+    switch (t) {
+        case TY_INT:    return ast_int(0);
+        case TY_FLOAT:  return ast_float(0.0);
+        case TY_BOOL:   return ast_bool(false);
+        case TY_STRING: return ast_string("");
+        case TY_INVALID: default: return ast_int(0);
+    }
 }
 %}
+
+%code requires {
+  #include "ast_base.h"
+}
 
 %union {
     struct Node* node;
@@ -80,6 +168,7 @@ bool insert_variable(const char *name, Node *value) {
     double floatValue;
     int boolValue;
     char *str;
+    TypeTag typeTag;
 }
 
 %token <intValue> INT_LIT
@@ -87,6 +176,11 @@ bool insert_variable(const char *name, Node *value) {
 %token <boolValue> BOOL_LIT
 %token <str> IDENT
 %token <str> STRING_LIT
+
+%token KW_INT
+%token KW_FLOAT
+%token KW_BOOL
+%token KW_STRING
 
 %token LPAREN RPAREN LBRACE RBRACE
 %token PLUS MINUS TIMES DIVIDE
@@ -113,10 +207,12 @@ bool insert_variable(const char *name, Node *value) {
 /* Habilita mensagens de erro detalhadas */
 %define parse.error verbose
 
-%type <node> Program StmtList Stmt Block IfStmt WhileStmt ForStmt
-%type <node> FunctionDef ParamList ArgList
-%type <node> Expr OrExpr AndExpr EqExpr RelExpr AddExpr MulExpr Unary Primary
-%type <node> Num AssignExpr
+%type <typeTag> TypeTag
+%type <node>    Program StmtList Stmt Block IfStmt WhileStmt ForStmt
+%type <node>    FunctionDef ParamList ArgList
+%type <node>    Expr OrExpr AndExpr EqExpr RelExpr AddExpr MulExpr Unary Primary
+%type <node>    Num AssignExpr
+%type <node>    Decl
 
 %start Program
 
@@ -133,6 +229,7 @@ StmtList
 
 Stmt
     : Expr SEMICOLON                        { $$ = ast_expr($1); }
+    | Decl                                  { $$ = $1; }
     | Block                                 { $$ = $1; }
     | IfStmt                                { $$ = $1; }
     | WhileStmt                             { $$ = NULL; }
@@ -145,14 +242,68 @@ Stmt
     ;
 
 Block
-    : LBRACE              { push_scope(); }
+    : LBRACE                                { push_scope(); }
       StmtList
-      RBRACE              { pop_scope(); $$ = $3; }
+      RBRACE                                { pop_scope(); $$ = $3; }
     ;
 
+TypeTag
+  : KW_INT                                  { $$ = TY_INT; }
+  | KW_FLOAT                                { $$ = TY_FLOAT; }
+  | KW_BOOL                                 { $$ = TY_BOOL; }
+  | KW_STRING                               { $$ = TY_STRING; }
+  ;
+
+Decl
+  : TypeTag IDENT ASSIGN Expr SEMICOLON     {
+                                                SymbolTable *sc = current_scope();
+                                                if (st_lookup(sc, $2)) {
+                                                    yyerror("Erro semântico: variável já declarada neste escopo");
+                                                    ast_free($4); free($2); YYERROR;
+                                                }
+
+                                                TypeTag inferred_type = infer_type($4);
+                                                bool compatible_types =
+                                                    (inferred_type == $1) ||
+                                                    (is_numeric(inferred_type) && is_numeric($1));
+
+                                                if (!compatible_types) {
+                                                    yyerror("Erro semântico: tipo incompatível na inicialização");
+                                                    ast_free($4); free($2); YYERROR;
+                                                }
+
+                                                $$ = ast_decl($1, $2, $4);
+                                                insert_variable($2, $1, ast_copy($4));
+                                                free($2);
+                                            }
+  | TypeTag IDENT SEMICOLON                 {
+                                                SymbolTable *sc = current_scope();
+                                                if (st_lookup(sc, $2)) {
+                                                    yyerror("Erro semântico: variável já declarada neste escopo");
+                                                    free($2); YYERROR;
+                                                }
+
+                                                $$ = ast_decl($1, $2, NULL);
+                                                insert_variable($2, $1, default_value_for($1));
+                                                free($2);
+                                            }
+  ;
+
 IfStmt
-  : IF LPAREN Expr RPAREN Stmt %prec IFX   { $$ = ast_if($3, $5, NULL); }
-  | IF LPAREN Expr RPAREN Stmt ELSE Stmt   { $$ = ast_if($3, $5, $7);   }
+  : IF LPAREN Expr RPAREN Stmt %prec IFX    {
+                                                if (infer_type($3) != TY_BOOL) {
+                                                    yyerror("Erro semântico: condição do if deve ser bool");
+                                                    ast_free($3); ast_free($5); YYERROR;
+                                                }
+                                                $$ = ast_if($3, $5, NULL);
+                                            }
+  | IF LPAREN Expr RPAREN Stmt ELSE Stmt    {
+                                                if (infer_type($3) != TY_BOOL) {
+                                                    yyerror("Erro semântico: condição do if deve ser bool");
+                                                    ast_free($3); ast_free($5); ast_free($7); YYERROR;
+                                                }
+                                                $$ = ast_if($3, $5, $7);
+                                            }
   ;
 
 WhileStmt
@@ -188,7 +339,32 @@ Expr
 AssignExpr
     : OrExpr
     | IDENT ASSIGN AssignExpr               {
-                                                insert_variable($1, ast_copy($3));
+                                                bool found = false;
+                                                TypeTag var_type = st_lookup_type_recursive(current_scope(), $1, &found);
+                                                if (!found) {
+                                                    yyerror("Erro semântico: variável não declarada");
+                                                    ast_free($3); free($1); YYERROR;
+                                                }
+
+                                                TypeTag inferred_type = infer_type($3);
+
+                                                bool compatible_types =
+                                                    (var_type == inferred_type) ||
+                                                    (is_numeric(var_type) && is_numeric(inferred_type));
+
+                                                if (!compatible_types) {
+                                                    yyerror("Erro semântico: tipos incompatíveis na atribuição");
+                                                    ast_free($3); free($1); YYERROR;
+                                                }
+
+                                                Node *right_expr =
+                                                    ($3 && $3->kind == ND_ASSIGN) ? $3->u.as_assign.value : $3;
+
+                                                if (!st_update_recursive(current_scope(), $1, ast_copy(right_expr))) {
+                                                    yyerror("Erro semântico: falha ao atualizar variável");
+                                                    ast_free($3); free($1); YYERROR;
+                                                }
+
                                                 $$ = ast_assign($1, $3);
                                                 free($1);
                                             }

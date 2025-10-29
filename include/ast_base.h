@@ -5,6 +5,14 @@
 #include <stddef.h>
 
 typedef enum {
+  TY_INVALID = 0,
+  TY_INT,
+  TY_FLOAT,
+  TY_BOOL,
+  TY_STRING
+} TypeTag;
+
+typedef enum {
   ND_INT,       // literal inteiro
   ND_FLOAT,     // literal float
   ND_BOOL,      // literal booleano (true/false)
@@ -15,7 +23,8 @@ typedef enum {
   ND_BLOCK,     // bloco de código ({ stmt* })
   ND_ASSIGN,    // atribuição (identificador = expr)
   ND_EXPR,      // expressão genérica
-  ND_IF         // instrução if
+  ND_IF,        // instrução if
+  ND_DECL,      // declaração de variável
 } NodeKind;
 
 typedef enum {
@@ -60,6 +69,7 @@ struct Node {
     struct { char *name; Node *value; } as_assign;
     struct { Node *expr; } as_expr;
     struct { Node *cond; Node *then_branch; Node *else_branch; } as_if;
+    struct { TypeTag type; char *name; Node *init; } as_decl;
   } u;
 };
 
@@ -67,7 +77,6 @@ struct Node {
 void *xmalloc(size_t size);
 char *xstrdup(const char *s);
 struct Node *new_node(NodeKind kind);
-
 Node *ast_copy(Node *node);
 
 #endif /* AST_BASE_H */

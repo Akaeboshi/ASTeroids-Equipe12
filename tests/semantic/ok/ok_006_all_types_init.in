@@ -1,0 +1,4 @@
+int    i = 1;
+float  f = 2.5;
+bool   b = true;
+string s = "hi";

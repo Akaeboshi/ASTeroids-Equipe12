@@ -1,0 +1,9 @@
+Block
+  Decl(int a)
+  Decl(int b)
+  Decl(int c)
+  Expression
+    Assign(a)
+      Assign(b)
+        Assign(c)
+          Int(1)

@@ -1,0 +1,13 @@
+Block
+  Decl(int i)
+    Init:
+      Int(1)
+  Decl(float f)
+    Init:
+      Float(2.5)
+  Decl(bool b)
+    Init:
+      Bool(true)
+  Decl(string s)
+    Init:
+      String(hi)
