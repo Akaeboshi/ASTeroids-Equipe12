@@ -75,6 +75,8 @@ bool insert_variable(const char *name, TypeTag type, Node *value) {
     return st_insert(scope, name, type, value);
 }
 
+static inline bool is_numeric(TypeTag t) { return t == TY_INT || t == TY_FLOAT; }
+
 // Deduz o tipo produzido por uma expressão AST
 static TypeTag infer_type(Node *n) {
     switch (n->kind) {
@@ -113,23 +115,21 @@ static TypeTag infer_type(Node *n) {
         switch (n->u.as_binary.op) {
           // Aritméticos -> int/float (promoção simples)
           case BIN_ADD: case BIN_SUB: case BIN_MUL:
-            if (L == TY_BOOL || L == TY_STRING || R == TY_BOOL || R == TY_STRING)
-              return TY_INVALID;
-            if (L == TY_FLOAT || R == TY_FLOAT)
-              return TY_FLOAT;
-            return TY_INT;
+            if (!is_numeric(L) || !is_numeric(R)) return TY_INVALID;
+            return (L == TY_FLOAT || R == TY_FLOAT) ? TY_FLOAT : TY_INT;
 
           case BIN_DIV:
-            if (L == TY_BOOL || L == TY_STRING || R == TY_BOOL || R == TY_STRING)
-              return TY_INVALID;
+            if (!is_numeric(L) || !is_numeric(R)) return TY_INVALID;
             return TY_FLOAT;
 
           // Comparações/igualdade -> bool
           case BIN_LT: case BIN_LE: case BIN_GT: case BIN_GE:
+            return (is_numeric(L) && is_numeric(R)) ? TY_BOOL : TY_INVALID;
           case BIN_EQ: case BIN_NEQ:
-            if (L == TY_INVALID || R == TY_INVALID) return TY_INVALID;
-            if (L != R) return TY_INVALID;
-            return TY_BOOL;
+            if (is_numeric(L) && is_numeric(R))   return TY_BOOL;
+            if (L == TY_BOOL   && R == TY_BOOL)   return TY_BOOL;
+            if (L == TY_STRING && R == TY_STRING) return TY_BOOL;
+            return TY_INVALID;
 
           // Lógicos -> bool
           case BIN_AND: case BIN_OR:
@@ -156,8 +156,6 @@ static Node *default_value_for(TypeTag t) {
         case TY_INVALID: default: return ast_int(0);
     }
 }
-
-static inline bool is_numeric(TypeTag t) { return t == TY_INT || t == TY_FLOAT; }
 %}
 
 %code requires {
@@ -265,7 +263,11 @@ Decl
                                                 }
 
                                                 TypeTag inferred_type = infer_type($4);
-                                                if (inferred_type != $1) {
+                                                bool compatible_types =
+                                                    (inferred_type == $1) ||
+                                                    (is_numeric(inferred_type) && is_numeric($1));
+
+                                                if (!compatible_types) {
                                                     yyerror("Erro semântico: tipo incompatível na inicialização");
                                                     ast_free($4); free($2); YYERROR;
                                                 }
@@ -347,16 +349,17 @@ AssignExpr
                                                 TypeTag inferred_type = infer_type($3);
 
                                                 bool compatible_types =
-                                                            (var_type == inferred_type) ||
-                                                            ((var_type == TY_INT || var_type == TY_FLOAT) &&
-                                                            (inferred_type == TY_INT || inferred_type == TY_FLOAT));
+                                                    (var_type == inferred_type) ||
+                                                    (is_numeric(var_type) && is_numeric(inferred_type));
 
                                                 if (!compatible_types) {
                                                     yyerror("Erro semântico: tipos incompatíveis na atribuição");
                                                     ast_free($3); free($1); YYERROR;
                                                 }
 
-                                                Node *right_expr = ($3 && $3->kind == ND_ASSIGN) ? $3->u.as_assign.value : $3;
+                                                Node *right_expr =
+                                                    ($3 && $3->kind == ND_ASSIGN) ? $3->u.as_assign.value : $3;
+
                                                 if (!st_update_recursive(current_scope(), $1, ast_copy(right_expr))) {
                                                     yyerror("Erro semântico: falha ao atualizar variável");
                                                     ast_free($3); free($1); YYERROR;
