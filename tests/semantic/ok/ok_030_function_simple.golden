@@ -1,0 +1,8 @@
+Block
+  Function(int foo)
+    Params:
+    Body:
+      Block
+        Return
+          Expr:
+            Int(1)

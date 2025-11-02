@@ -1,0 +1,12 @@
+Block
+  Function(float sum)
+    Params:
+      Decl(int a)
+      Decl(float b)
+    Body:
+      Block
+        Return
+          Expr:
+            Binary(+)
+              Ident(a)
+              Ident(b)
