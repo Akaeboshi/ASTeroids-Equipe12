@@ -40,8 +40,7 @@ static const char *type_to_string(TypeTag type) {
 }
 
 static void print (const Node *node) {
-  if(!node) { printf("NULL"); return;
-}
+if(!node) { printf("NULL"); return; }
   switch (node -> kind) {
     case ND_INT:
       printf("%ld", node -> u.as_int.value);

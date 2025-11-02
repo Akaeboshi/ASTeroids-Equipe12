@@ -157,8 +157,16 @@ static Node *default_value_for(TypeTag t) {
     }
 }
 
-static TypeTag g_fun_ret_stack[64];
-static int     g_fun_ret_sp = 0;
+#define MAX_FUNCTION_NESTING_DEPTH 64
+static TypeTag g_fun_ret_stack[MAX_FUNCTION_NESTING_DEPTH];
+static void push_fun_ret(TypeTag t) {
+    if (g_fun_ret_sp < 64) {
+        g_fun_ret_stack[g_fun_ret_sp++] = t;
+    } else {
+        fprintf(stderr, "Erro interno: pilha de tipos de retorno de função excedida\n");
+        exit(EXIT_FAILURE);
+    }
+}
 static void push_fun_ret(TypeTag t) { g_fun_ret_stack[g_fun_ret_sp++] = t; }
 static void pop_fun_ret(void) { if (g_fun_ret_sp) g_fun_ret_sp--; }
 

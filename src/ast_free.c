@@ -81,7 +81,7 @@ void ast_free(Node *node) {
     }
 
     case ND_RETURN:
-      ast_free(node->u.as_return.expr);
+      if (node->u.as_return.expr) ast_free(node->u.as_return.expr);
       break;
   }
 
