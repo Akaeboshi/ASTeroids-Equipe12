@@ -232,8 +232,8 @@ Stmt
     | Decl                                  { $$ = $1; }
     | Block                                 { $$ = $1; }
     | IfStmt                                { $$ = $1; }
-    | WhileStmt                             { $$ = NULL; }
-    | ForStmt                               { $$ = NULL; }
+    | WhileStmt                             { $$ = $1; }
+    | ForStmt                               { $$ = $1; }
     | FunctionDef                           { $$ = NULL; }
     | RETURN Expr SEMICOLON                 { ast_free($2); $$ = NULL; }
     | SEMICOLON                             { $$ = NULL; }
@@ -307,12 +307,26 @@ IfStmt
   ;
 
 WhileStmt
-    : WHILE LPAREN Expr RPAREN Stmt         { ast_free($3); ast_free($5); $$ = NULL; }
+    : WHILE LPAREN Expr RPAREN Stmt         {
+                                                if (infer_type($3) != TY_BOOL) {
+                                                    yyerror("Erro semântico: condição do while deve ser bool");
+                                                    ast_free($3); ast_free($5); YYERROR;
+                                                }
+
+                                                $$ = ast_while($3, $5);
+                                            }
     ;
 
 ForStmt
     : FOR LPAREN Expr SEMICOLON Expr SEMICOLON Expr RPAREN Stmt
-                                            { ast_free($3); ast_free($5); ast_free($7); ast_free($9); $$ = NULL; }
+                                            {
+                                              if (infer_type($5) != TY_BOOL) {
+                                                  yyerror("Erro semântico: condição do for deve ser bool");
+                                                  ast_free($3); ast_free($5); ast_free($7); ast_free($9); YYERROR;
+                                              }
+
+                                              $$ = ast_for($3, $5, $7, $9);
+                                            }
     ;
 
 FunctionDef

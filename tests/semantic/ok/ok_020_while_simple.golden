@@ -1,0 +1,16 @@
+Block
+  Decl(int i)
+    Init:
+      Int(0)
+  While
+    Cond:
+      Binary(<)
+        Ident(i)
+        Int(3)
+    Body:
+      Block
+        Expression
+          Assign(i)
+            Binary(+)
+              Ident(i)
+              Int(1)

@@ -1,0 +1,22 @@
+Block
+  Decl(int i)
+    Init:
+      Int(0)
+  For
+    Init:
+      Assign(i)
+        Int(0)
+    Cond:
+      Binary(<)
+        Ident(i)
+        Int(2)
+    Step:
+      Assign(i)
+        Binary(+)
+          Ident(i)
+          Int(1)
+    Body:
+      Block
+        Decl(int x)
+          Init:
+            Int(1)
