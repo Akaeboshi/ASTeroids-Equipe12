@@ -34,13 +34,13 @@ static const char *type_to_string(TypeTag type) {
         case TY_FLOAT:  return "float";
         case TY_BOOL:   return "bool";
         case TY_STRING: return "string";
+        case TY_VOID:   return "void";
         default:        return "<invalid>";
     }
 }
 
 static void print (const Node *node) {
-  if(!node) { printf("NULL"); return; }
-
+if(!node) { printf("NULL"); return; }
   switch (node -> kind) {
     case ND_INT:
       printf("%ld", node -> u.as_int.value);
@@ -136,6 +136,28 @@ static void print (const Node *node) {
       print(node->u.as_for.step);
       printf(") ");
       print(node->u.as_for.body);
+      break;
+
+    case ND_FUNCTION: {
+      printf("%s %s(", type_to_string(node->u.as_function.ret_type),
+                      node->u.as_function.name);
+      for (size_t i = 0; i < node->u.as_function.param_count; i++) {
+        Node *p = node->u.as_function.params[i]; /* ND_DECL */
+        printf("%s %s", type_to_string(p->u.as_decl.type), p->u.as_decl.name);
+        if (i + 1 < node->u.as_function.param_count) printf(", ");
+      }
+      printf(") ");
+      print(node->u.as_function.body);
+      break;
+    }
+
+    case ND_RETURN:
+      printf("return");
+      if (node->u.as_return.expr) {
+        printf(" ");
+        print(node->u.as_return.expr);
+      }
+      printf(";");
       break;
   }
 }
@@ -245,8 +267,30 @@ static void print_pretty(const Node *node, int depth) {
       indent(depth + 2); printf("Body:\n");
       print_pretty(node->u.as_for.body, depth + 4);
       break;
+
+    case ND_FUNCTION:
+      printf("Function(%s %s)\n", type_to_string(node->u.as_function.ret_type), node->u.as_function.name);
+      for (int i = 0; i < depth + 2; i++) putchar(' ');
+      printf("Params:\n");
+      for (size_t i = 0; i < node->u.as_function.param_count; i++) {
+        print_pretty(node->u.as_function.params[i], depth + 4);
+      }
+      for (int i = 0; i < depth + 2; i++) putchar(' ');
+      printf("Body:\n");
+      print_pretty(node->u.as_function.body, depth + 4);
+      break;
+
+    case ND_RETURN:
+      printf("Return\n");
+      if (node->u.as_return.expr) {
+        for (int i = 0; i < depth + 2; i++) putchar(' ');
+        printf("Expr:\n");
+        print_pretty(node->u.as_return.expr, depth + 4);
+      }
+      break;
   }
 }
+
 void ast_print_pretty(const Node *node) {
   print_pretty(node, 0);
 }

@@ -1,0 +1,3 @@
+float sum(int a, float b) {
+  return a + b;
+}

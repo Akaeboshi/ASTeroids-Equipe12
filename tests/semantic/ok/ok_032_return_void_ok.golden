@@ -1,0 +1,6 @@
+Block
+  Function(void log)
+    Params:
+    Body:
+      Block
+        Return
