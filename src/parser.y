@@ -158,24 +158,29 @@ static Node *default_value_for(TypeTag t) {
 }
 
 #define MAX_FUNCTION_NESTING_DEPTH 64
+
 static TypeTag g_fun_ret_stack[MAX_FUNCTION_NESTING_DEPTH];
+static int     g_fun_ret_sp = 0;
+
 static void push_fun_ret(TypeTag t) {
-    if (g_fun_ret_sp < 64) {
-        g_fun_ret_stack[g_fun_ret_sp++] = t;
-    } else {
+    if (g_fun_ret_sp >= MAX_FUNCTION_NESTING_DEPTH) {
         fprintf(stderr, "Erro interno: pilha de tipos de retorno de função excedida\n");
         exit(EXIT_FAILURE);
     }
+    g_fun_ret_stack[g_fun_ret_sp++] = t;
 }
-static void push_fun_ret(TypeTag t) { g_fun_ret_stack[g_fun_ret_sp++] = t; }
-static void pop_fun_ret(void) { if (g_fun_ret_sp) g_fun_ret_sp--; }
 
-/* Retorna o tipo de retorno da função atual (ou TY_VOID se estiver fora de função) */
-static TypeTag current_fun_ret(void) { return g_fun_ret_sp ? g_fun_ret_stack[g_fun_ret_sp - 1] : TY_VOID; }
+static void pop_fun_ret(void) {
+    if (g_fun_ret_sp > 0) g_fun_ret_sp--;
+}
+
+static TypeTag current_fun_ret(void) {
+    return (g_fun_ret_sp > 0) ? g_fun_ret_stack[g_fun_ret_sp - 1] : TY_VOID;
+}
 
 /* Buffers temporários para parâmetros de função */
-static Node **g_params_buf = NULL;
-static size_t g_params_len = 0;
+static Node  **g_params_buf = NULL;
+static size_t  g_params_len = 0;
 %}
 
 %code requires {
