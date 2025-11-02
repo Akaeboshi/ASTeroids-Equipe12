@@ -156,6 +156,18 @@ static Node *default_value_for(TypeTag t) {
         case TY_INVALID: default: return ast_int(0);
     }
 }
+
+static TypeTag g_fun_ret_stack[64];
+static int     g_fun_ret_sp = 0;
+static void push_fun_ret(TypeTag t) { g_fun_ret_stack[g_fun_ret_sp++] = t; }
+static void pop_fun_ret(void) { if (g_fun_ret_sp) g_fun_ret_sp--; }
+
+/* Retorna o tipo de retorno da função atual (ou TY_VOID se estiver fora de função) */
+static TypeTag current_fun_ret(void) { return g_fun_ret_sp ? g_fun_ret_stack[g_fun_ret_sp - 1] : TY_VOID; }
+
+/* Buffers temporários para parâmetros de função */
+static Node **g_params_buf = NULL;
+static size_t g_params_len = 0;
 %}
 
 %code requires {
@@ -181,6 +193,7 @@ static Node *default_value_for(TypeTag t) {
 %token KW_FLOAT
 %token KW_BOOL
 %token KW_STRING
+%token KW_VOID
 
 %token LPAREN RPAREN LBRACE RBRACE
 %token PLUS MINUS TIMES DIVIDE
@@ -209,7 +222,7 @@ static Node *default_value_for(TypeTag t) {
 
 %type <typeTag> TypeTag
 %type <node>    Program StmtList Stmt Block IfStmt WhileStmt ForStmt
-%type <node>    FunctionDef ParamList ArgList
+%type <node>    FunctionDef ParamList Param ArgList
 %type <node>    Expr OrExpr AndExpr EqExpr RelExpr AddExpr MulExpr Unary Primary
 %type <node>    Num AssignExpr
 %type <node>    Decl
@@ -234,8 +247,34 @@ Stmt
     | IfStmt                                { $$ = $1; }
     | WhileStmt                             { $$ = $1; }
     | ForStmt                               { $$ = $1; }
-    | FunctionDef                           { $$ = NULL; }
-    | RETURN Expr SEMICOLON                 { ast_free($2); $$ = NULL; }
+    | FunctionDef                           { $$ = $1; }
+    | RETURN SEMICOLON                      {
+                                                if (current_fun_ret() != TY_VOID) {
+                                                    yyerror("Erro semântico: retorno vazio em função não-void");
+                                                    YYERROR;
+                                                }
+                                                $$ = ast_return(NULL);
+                                            }
+    | RETURN Expr SEMICOLON                 {
+                                                TypeTag wanted_type = current_fun_ret();
+                                                TypeTag got_type = infer_type($2);
+
+                                                if (wanted_type == TY_VOID) {
+                                                    yyerror("Erro semântico: return com valor em função void");
+                                                    YYERROR;
+                                                }
+
+                                                bool ok = (wanted_type == got_type) ||
+                                                          (is_numeric(wanted_type) && is_numeric(got_type));
+
+                                                if (!ok) {
+                                                    yyerror("Erro semântico: tipo de retorno incompatível");
+                                                    ast_free($2);
+                                                    YYERROR;
+                                                }
+
+                                                $$ = ast_return($2);
+                                            }
     | SEMICOLON                             { $$ = NULL; }
     | ERROR                                 { yyerrok; $$ = NULL; }  /* consome erro léxico isolado */
     | error SEMICOLON                       { yyerror("recuperado: instrução inválida"); yyerrok; $$ = NULL; }
@@ -252,6 +291,7 @@ TypeTag
   | KW_FLOAT                                { $$ = TY_FLOAT; }
   | KW_BOOL                                 { $$ = TY_BOOL; }
   | KW_STRING                               { $$ = TY_STRING; }
+  | KW_VOID                                 { $$ = TY_VOID; }
   ;
 
 Decl
@@ -330,14 +370,51 @@ ForStmt
     ;
 
 FunctionDef
-    : FUNCTION IDENT LPAREN ParamList RPAREN Block
-                                            { free($2); ast_free($6); $$ = NULL; }
+    : TypeTag IDENT LPAREN ParamList RPAREN
+                                            {
+                                              push_fun_ret($1);
+                                              push_scope();
+
+                                              Node *plist = $4;
+                                              g_params_len = plist->u.as_block.count;
+
+                                              if(g_params_len > 0) {
+                                                g_params_buf = (Node**)xmalloc(sizeof(Node*) * g_params_len);
+
+                                                for (size_t i = 0; i < g_params_len; i++) {
+                                                  Node *pd = plist->u.as_block.stmts[i];
+                                                  g_params_buf[i] = pd;
+                                                  insert_variable(pd->u.as_decl.name,
+                                                                  pd->u.as_decl.type,
+                                                                  default_value_for(pd->u.as_decl.type));
+                                                }
+                                              } else {
+                                                g_params_buf = NULL;
+                                              }
+
+                                              free(plist->u.as_block.stmts);
+                                              free(plist);
+                                            }
+
+                                            Block
+                                            {
+                                              Node *body = $7;
+                                              $$ = ast_function($1, $2, g_params_buf, g_params_len, body);
+                                              g_params_buf = NULL; g_params_len = 0;
+
+                                              pop_scope();
+                                              pop_fun_ret();
+                                            }
+    ;
+
+Param
+    : TypeTag IDENT                         { $$ = ast_decl($1, $2, NULL); free($2); }
     ;
 
 ParamList
-    : %empty                                { $$ = NULL; }
-    | IDENT                                 { free($1); $$ = NULL; }
-    | ParamList COMMA IDENT                 { free($3); $$ = NULL; }
+    : %empty                                { $$ = ast_block(); }
+    | Param                                 { $$ = ast_block(); ast_block_add_stmt($$, $1); }
+    | ParamList COMMA Param                 { ast_block_add_stmt($1, $3); $$ = $1; }
     ;
 
 ArgList

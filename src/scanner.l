@@ -93,6 +93,7 @@ static char* process_string_literal(const char* text, int len) {
 "for"                   { ADVANCE_COLUMN; return FOR; }
 "function"              { ADVANCE_COLUMN; return FUNCTION; }
 "return"                { ADVANCE_COLUMN; return RETURN; }
+"void"                  { ADVANCE_COLUMN; return KW_VOID; }
 
 [a-zA-Z_][a-zA-Z0-9_]*  { yylval.str = xstrdup(yytext); ADVANCE_COLUMN; return IDENT; } /* identificadores */
 
