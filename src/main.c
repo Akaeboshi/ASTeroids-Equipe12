@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ast.h"
+#include "semantic_analyzer.h"
 
 /* -------------------------------------------------------------------------- */
 /* Símbolos exportados pelo parser e scanner (gerados pelo Bison/Flex)        */
