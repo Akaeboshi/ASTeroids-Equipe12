@@ -228,7 +228,14 @@ StmtList
     ;
 
 Stmt
-    : Expr SEMICOLON                        { $$ = ast_expr($1); }
+    : Expr SEMICOLON                        {
+                                            TypeTag t = infer_type($1); // Força a verificação de tipos da expressão
+                                             if (t == TY_INVALID) {      // Se infer_type detectou um erro (como variável não declarada)
+                                                 ast_free($1); 
+                                                 YYERROR;
+                                             }  
+                                             $$ = ast_expr($1); 
+                                             }
     | Decl                                  { $$ = $1; }
     | Block                                 { $$ = $1; }
     | IfStmt                                { $$ = $1; }
@@ -291,15 +298,17 @@ Decl
 
 IfStmt
   : IF LPAREN Expr RPAREN Stmt %prec IFX    {
-                                                if (infer_type($3) != TY_BOOL) {
-                                                    yyerror("Erro semântico: condição do if deve ser bool");
+                                                TypeTag condition_type = infer_type($3);
+                                                if (infer_type($3) != TY_BOOL && !is_numeric(condition_type)) {
+                                                    yyerror("Erro semântico: condição do if deve ser bool ou numerica");
                                                     ast_free($3); ast_free($5); YYERROR;
                                                 }
                                                 $$ = ast_if($3, $5, NULL);
                                             }
   | IF LPAREN Expr RPAREN Stmt ELSE Stmt    {
-                                                if (infer_type($3) != TY_BOOL) {
-                                                    yyerror("Erro semântico: condição do if deve ser bool");
+                                                TypeTag condition_type = infer_type($3);
+                                                if (infer_type($3) != TY_BOOL && !is_numeric(condition_type)) {
+                                                    yyerror("Erro semântico: condição do if deve ser bool ou numerica");
                                                     ast_free($3); ast_free($5); ast_free($7); YYERROR;
                                                 }
                                                 $$ = ast_if($3, $5, $7);

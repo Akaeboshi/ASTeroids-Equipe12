@@ -1,0 +1,13 @@
+
+string texto = "Não sou um número";
+
+int fail1;
+int fail2;
+
+if (texto) 
+    fail1 = 1; 
+
+
+if (texto + 5) 
+    fail2 = 1; 
+

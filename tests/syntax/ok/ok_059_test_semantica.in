@@ -1,0 +1,7 @@
+int x = 0;
+int y = 0;
+
+if (1) 
+    x = 2; 
+else 
+    y = 3; 
