@@ -1,0 +1,7 @@
+int x = 10;
+string s = "ASTeroids";
+
+leitura_de_dados();
+print_int(x);
+set_color(1, 2, 3);
+log_info(s, 5.0, true);

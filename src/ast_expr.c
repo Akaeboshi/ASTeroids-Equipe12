@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "symbol_table.h"
 
 Node *ast_int(long value) {
   Node *node = new_node(ND_INT);
@@ -123,3 +124,12 @@ Node *ast_for(Node *init, Node *cond, Node *step, Node *body) {
     n->u.as_for.body = body;
     return n;
 }
+
+Node *ast_call(const char *name, Node *args) {
+    Node *n = xmalloc(sizeof(Node));
+    n->kind = ND_CALL;
+    n->u.as_call.name = xstrdup(name);
+    n->u.as_call.args = args;
+    return n;
+}
+

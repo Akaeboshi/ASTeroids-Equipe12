@@ -137,10 +137,30 @@ static void print (const Node *node) {
       printf(") ");
       print(node->u.as_for.body);
       break;
+
+    case ND_CALL:
+      printf("%s(", node->u.as_call.name);
+      
+      // Lógica para imprimir os argumentos, separando-os por vírgula.
+      if (node->u.as_call.args) {
+          Node *args_block = node->u.as_call.args;
+          // Assumimos que argumentos são agrupados em um ND_BLOCK
+          if (args_block->kind == ND_BLOCK) {
+               for (size_t i = 0; i < args_block->u.as_block.count; i++) {
+                   print(args_block->u.as_block.stmts[i]); // Chamada recursiva compacta
+                   if (i + 1 < args_block->u.as_block.count) printf(", ");
+               }
+          } else {
+              print(args_block);
+          }
+      }
+      
+      printf(")");
+      break;
   }
 }
 
-void ast_print(const Node *node) {
+void ast_print(const Node *node, int indent) {
   print(node);
   printf("\n");
 }

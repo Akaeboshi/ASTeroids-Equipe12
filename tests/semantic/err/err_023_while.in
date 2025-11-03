@@ -1,0 +1,5 @@
+string texto = "Nao sou um numero";
+
+while (texto) { 
+        int fail1 = 1;
+    }

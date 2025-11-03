@@ -71,6 +71,21 @@ Node *ast_copy(Node *node) {
           copy->u.as_decl.name = xstrdup(node->u.as_decl.name);
           copy->u.as_decl.init = node->u.as_decl.init ? ast_copy(node->u.as_decl.init) : NULL;
           break;
+        case ND_CALL:
+          copy->u.as_call.name = xstrdup(node->u.as_call.name); 
+          copy->u.as_call.args = ast_copy(node->u.as_call.args);
+          break;
+        case ND_WHILE:
+          copy->u.as_while.cond = ast_copy(node->u.as_while.cond);
+          copy->u.as_while.body = ast_copy(node->u.as_while.body);
+          break;
+
+        case ND_FOR:
+          copy->u.as_for.init = ast_copy(node->u.as_for.init);
+          copy->u.as_for.cond = ast_copy(node->u.as_for.cond);
+          copy->u.as_for.step = ast_copy(node->u.as_for.step);
+          copy->u.as_for.body = ast_copy(node->u.as_for.body);
+          break;
     }
     return copy;
 }

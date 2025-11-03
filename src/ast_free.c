@@ -56,6 +56,10 @@ void ast_free(Node *node) {
         if (node->u.as_for.step) ast_free(node->u.as_for.step);
         if (node->u.as_for.body) ast_free(node->u.as_for.body);
         break;
+      case ND_CALL:
+        if(node->u.as_call.name)  free(node->u.as_call.name);
+        if (node->u.as_call.args) ast_free(node->u.as_call.args);
+        break;
   }
 
   free(node);

@@ -213,6 +213,7 @@ static Node *default_value_for(TypeTag t) {
 %type <node>    Expr OrExpr AndExpr EqExpr RelExpr AddExpr MulExpr Unary Primary
 %type <node>    Num AssignExpr
 %type <node>    Decl
+%type <node>    FuncCall OptArgList
 
 %start Program
 
@@ -229,10 +230,10 @@ StmtList
 
 Stmt
     : Expr SEMICOLON                        {
-                                            TypeTag t = infer_type($1); // Força a verificação de tipos da expressão
-                                             if (t == TY_INVALID) {      // Se infer_type detectou um erro (como variável não declarada)
-                                                 ast_free($1); 
-                                                 YYERROR;
+                                               TypeTag t = infer_type($1); // Força a verificação de tipos da expressão
+                                               if (t == TY_INVALID) {      // Se infer_type detectou um erro (como variável não declarada)
+                                               ast_free($1); 
+                                               YYERROR;
                                              }  
                                              $$ = ast_expr($1); 
                                              }
@@ -317,8 +318,9 @@ IfStmt
 
 WhileStmt
     : WHILE LPAREN Expr RPAREN Stmt         {
-                                                if (infer_type($3) != TY_BOOL) {
-                                                    yyerror("Erro semântico: condição do while deve ser bool");
+                                                TypeTag condition_type = infer_type($3);
+                                                if (infer_type($3) != TY_BOOL && !is_numeric(condition_type)) {
+                                                    yyerror("Erro semântico: condição do while deve ser bool ou numerico");
                                                     ast_free($3); ast_free($5); YYERROR;
                                                 }
 
@@ -329,8 +331,9 @@ WhileStmt
 ForStmt
     : FOR LPAREN Expr SEMICOLON Expr SEMICOLON Expr RPAREN Stmt
                                             {
-                                              if (infer_type($5) != TY_BOOL) {
-                                                  yyerror("Erro semântico: condição do for deve ser bool");
+                                              TypeTag condition_type = infer_type($5);
+                                              if (infer_type($5) != TY_BOOL && !is_numeric(condition_type)) {
+                                                  yyerror("Erro semântico: condição do for deve ser bool ou numerico");
                                                   ast_free($3); ast_free($5); ast_free($7); ast_free($9); YYERROR;
                                               }
 
@@ -349,11 +352,30 @@ ParamList
     | ParamList COMMA IDENT                 { free($3); $$ = NULL; }
     ;
 
-ArgList
-    : %empty                                { $$ = NULL; }
-    | Expr                                  { $$ = $1; }
-    | ArgList COMMA Expr                    { ast_free($3); $$ = $1; }
-    ;
+FuncCall:
+    IDENT LPAREN OptArgList RPAREN
+    {
+
+        $$ = ast_call($1, $3); 
+        
+    }
+;
+
+OptArgList:
+     %empty              { $$ = NULL; } // Chamada sem argumentos
+    | ArgList            { $$ = $1; }   // Chamada com argumentos
+;
+
+ArgList:
+    Expr                 
+    { 
+        $$ = ast_block(); ast_block_add_stmt($$, ast_expr($1)); 
+    }
+    | ArgList COMMA Expr 
+    { 
+        ast_block_add_stmt($1, ast_expr($3)); $$ = $1; 
+    }
+;
 
 Expr
     : AssignExpr                            { $$ = $1; }
@@ -439,7 +461,7 @@ Primary
     : LPAREN Expr RPAREN                    { $$ = $2; }
     | Num                                   { $$ = $1; }
     | IDENT                                 { $$ = ast_ident($1); free($1); }
-    | IDENT LPAREN ArgList RPAREN           { free($1); $$ = NULL; }
+    | IDENT LPAREN OptArgList RPAREN        { $$ = ast_call($1, $3); free($1); }
     | STRING_LIT                            { $$ = ast_string($1); free($1); }
     ;
 

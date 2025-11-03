@@ -18,5 +18,6 @@ Node *ast_if(Node *cond, Node *then_branch, Node *else_branch);
 Node *ast_decl(TypeTag type, const char *name, Node *init);
 Node *ast_while(Node *cond, Node *body);
 Node *ast_for(Node *init, Node *cond, Node *step, Node *body);
+Node *ast_call(const char *name, Node *args);
 
 #endif /* AST_EXPR_H */

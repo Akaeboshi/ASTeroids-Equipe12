@@ -27,6 +27,7 @@ typedef enum {
   ND_DECL,      // declaração de variável
   ND_WHILE,     // instrução while
   ND_FOR,       // instrução for
+  ND_CALL       // chamada de função
 } NodeKind;
 
 typedef enum {
@@ -74,6 +75,7 @@ struct Node {
     struct { TypeTag type; char *name; Node *init; } as_decl;
     struct { Node *cond; Node *body; } as_while;
     struct { Node *init; Node *cond; Node *step; Node *body; } as_for;
+    struct { char *name; Node *args; } as_call;
   } u;
 };
 

@@ -10,6 +10,7 @@ typedef struct Symbol {
     char *name;
     TypeTag type;
     Node *value;
+    TypeTag return_type;
     struct Symbol *next;
 } Symbol;
 

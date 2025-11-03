@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
     /* ---------------------------------------------------------------------- */
     if (g_program_ast) {
         printf("=== AST (Compacta) ===\n");
-        ast_print(g_program_ast);
+        ast_print(g_program_ast,0);
 
         printf("=== AST (Formatada) ===\n");
         ast_print_pretty(g_program_ast);
