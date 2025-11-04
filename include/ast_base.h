@@ -9,7 +9,8 @@ typedef enum {
   TY_INT,
   TY_FLOAT,
   TY_BOOL,
-  TY_STRING
+  TY_STRING,
+  TY_VOID,
 } TypeTag;
 
 typedef enum {
@@ -27,6 +28,8 @@ typedef enum {
   ND_DECL,      // declaração de variável
   ND_WHILE,     // instrução while
   ND_FOR,       // instrução for
+  ND_FUNCTION,  // declaração de função
+  ND_RETURN,    // instrução return
   ND_CALL       // chamada de função
 } NodeKind;
 
@@ -75,6 +78,8 @@ struct Node {
     struct { TypeTag type; char *name; Node *init; } as_decl;
     struct { Node *cond; Node *body; } as_while;
     struct { Node *init; Node *cond; Node *step; Node *body; } as_for;
+    struct { TypeTag ret_type; char *name; struct Node **params; size_t param_count; struct Node *body; } as_function;
+    struct { Node *expr; } as_return;
     struct { char *name; Node *args; } as_call;
   } u;
 };

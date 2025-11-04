@@ -125,6 +125,24 @@ Node *ast_for(Node *init, Node *cond, Node *step, Node *body) {
     return n;
 }
 
+Node *ast_function(TypeTag ret_type, char *name, Node **params, size_t param_count, Node *body) {
+    Node *n = (Node*)xmalloc(sizeof(Node));
+    n->kind = ND_FUNCTION;
+    n->u.as_function.ret_type    = ret_type;
+    n->u.as_function.name        = name;
+    n->u.as_function.params      = params;
+    n->u.as_function.param_count = param_count;
+    n->u.as_function.body        = body;
+    return n;
+}
+
+Node *ast_return(Node *expr) {
+    Node *n = (Node*)xmalloc(sizeof(Node));
+    n->kind = ND_RETURN;
+    n->u.as_return.expr = expr;
+    return n;
+}
+
 Node *ast_call(const char *name, Node *args) {
     Node *n = xmalloc(sizeof(Node));
     n->kind = ND_CALL;
