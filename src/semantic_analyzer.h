@@ -18,6 +18,6 @@ typedef enum {
  * Ela "visita" a AST, preenche a tabela de símbolos e checa os tipos.
  * Retorna 1 (true) se tudo estiver correto, 0 (false) se houver erros.
  */
-int check_semantics(ASTNode* ast_root, SymbolTable* table);
+int check_semantics(Node* ast_root, SymbolTable* table);
 
 #endif
