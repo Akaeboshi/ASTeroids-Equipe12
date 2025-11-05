@@ -14,10 +14,13 @@ typedef enum {
     TYPE_ERROR // Um tipo especial para propagar erros
 } Type;
 
-/* * A função principal.
- * Ela "visita" a AST, preenche a tabela de símbolos e checa os tipos.
- * Retorna 1 (true) se tudo estiver correto, 0 (false) se houver erros.
+/* Executa a análise semântica sobre a AST.
+ * Retorna: número de erros encontrados (0 = sucesso).
  */
-int check_semantics(Node* ast_root, SymbolTable* table);
+int check_semantics(Node *root, SymbolTable *table);
+
+/* Retorna 1 se não há erros, 0 se há erros. */
+int semantics_ok(Node *root, SymbolTable *table);
+
 
 #endif

@@ -16,169 +16,7 @@ void yyerror(const char *s) {
     g_parse_errors++;
 }
 
-// Pilha de escopos
-typedef struct ScopeStack {
-    SymbolTable *current;
-    struct ScopeStack *next;
-} ScopeStack;
-
-ScopeStack *scope_stack = NULL;
-
-void push_scope(void) {
-    ScopeStack *new_scope = (ScopeStack*)xmalloc(sizeof(ScopeStack));
-    new_scope->current = st_create();
-    new_scope->current->parent = scope_stack ? scope_stack->current : NULL;
-    new_scope->next = scope_stack;
-    scope_stack = new_scope;
-    printf("DEBUG: Escopo criado: current=%p parent=%p\n",
-        (void*)new_scope->current, (void*)new_scope->current->parent);
-}
-
-void pop_scope(void) {
-    if (scope_stack) {
-        ScopeStack *temp = scope_stack;
-        scope_stack = scope_stack->next;
-        printf("DEBUG: Escopo destruído: %p\n", (void*)temp->current);
-        st_destroy(temp->current);
-        free(temp);
-    }
-}
-
-SymbolTable* current_scope(void) {
-    return scope_stack ? scope_stack->current : NULL;
-}
-
-// Busca recursiva em todos os escopos
-Node* lookup_variable(const char *name) {
-    ScopeStack *current = scope_stack;
-    printf("DEBUG: Buscando variável '%s' na pilha de escopos\n", name);
-    while (current) {
-        Node *value = st_lookup(current->current, name);
-        if (value) {
-            printf("DEBUG: Variável '%s' encontrada no escopo %p\n", name, (void*)current->current);
-            return value;
-        }
-        current = current->next;
-    }
-    printf("DEBUG: Variável '%s' NÃO encontrada em nenhum escopo\n", name);
-    return NULL;
-}
-
-// Insere no escopo atual
-bool insert_variable(const char *name, TypeTag type, Node *value) {
-    SymbolTable *scope = current_scope();
-    if (!scope) {
-        printf("DEBUG: ERRO - Nenhum escopo atual para inserir '%s'\n", name);
-        return false;
-    }
-    printf("DEBUG: Inserindo variável '%s' no escopo %p\n", name, (void*)scope);
-    return st_insert(scope, name, type, value);
-}
-
-static inline bool is_numeric(TypeTag t) { return t == TY_INT || t == TY_FLOAT; }
-
-// Deduz o tipo produzido por uma expressão AST
-static TypeTag infer_type(Node *n) {
-    switch (n->kind) {
-      case ND_INT:    return TY_INT;
-      case ND_FLOAT:  return TY_FLOAT;
-      case ND_BOOL:   return TY_BOOL;
-      case ND_STRING: return TY_STRING;
-
-      case ND_IDENT: {
-        bool ok = false;
-        TypeTag t = st_lookup_type_recursive(current_scope(), n->u.as_ident.name, &ok);
-        if (!ok) {
-            fprintf(stderr,
-                    "Erro semântico: identificador '%s' não declarado (linha %d)\n",
-                    n->u.as_ident.name, yylineno);
-            return TY_INVALID;
-        }
-        return t;
-      }
-
-      case ND_UNARY: {
-          TypeTag T = infer_type(n->u.as_unary.expr);
-          if (T == TY_INVALID) return TY_INVALID;
-          if (n->u.as_unary.op == UN_NEG) return (T == TY_INT || T == TY_FLOAT) ? T : TY_INVALID;
-          if (n->u.as_unary.op == UN_NOT) return TY_BOOL;
-
-          return T;
-      }
-
-      case ND_BINARY: {
-        TypeTag L = infer_type(n->u.as_binary.left);
-        TypeTag R = infer_type(n->u.as_binary.right);
-
-        if (L == TY_INVALID || R == TY_INVALID) return TY_INVALID;
-
-        switch (n->u.as_binary.op) {
-          // Aritméticos -> int/float (promoção simples)
-          case BIN_ADD: case BIN_SUB: case BIN_MUL:
-            if (!is_numeric(L) || !is_numeric(R)) return TY_INVALID;
-            return (L == TY_FLOAT || R == TY_FLOAT) ? TY_FLOAT : TY_INT;
-
-          case BIN_DIV:
-            if (!is_numeric(L) || !is_numeric(R)) return TY_INVALID;
-            return TY_FLOAT;
-
-          // Comparações/igualdade -> bool
-          case BIN_LT: case BIN_LE: case BIN_GT: case BIN_GE:
-            return (is_numeric(L) && is_numeric(R)) ? TY_BOOL : TY_INVALID;
-          case BIN_EQ: case BIN_NEQ:
-            if (is_numeric(L) && is_numeric(R))   return TY_BOOL;
-            if (L == TY_BOOL   && R == TY_BOOL)   return TY_BOOL;
-            if (L == TY_STRING && R == TY_STRING) return TY_BOOL;
-            return TY_INVALID;
-
-          // Lógicos -> bool
-          case BIN_AND: case BIN_OR:
-            return (L == TY_BOOL && R == TY_BOOL) ? TY_BOOL : TY_INVALID;
-
-        }
-        return TY_INVALID;
-      }
-
-      case ND_ASSIGN:
-        return infer_type(n->u.as_assign.value);
-
-      default:
-        return TY_INVALID;
-    }
-}
-
-static Node *default_value_for(TypeTag t) {
-    switch (t) {
-        case TY_INT:    return ast_int(0);
-        case TY_FLOAT:  return ast_float(0.0);
-        case TY_BOOL:   return ast_bool(false);
-        case TY_STRING: return ast_string("");
-        case TY_INVALID: default: return ast_int(0);
-    }
-}
-
-#define MAX_FUNCTION_NESTING_DEPTH 64
-
-static TypeTag g_fun_ret_stack[MAX_FUNCTION_NESTING_DEPTH];
-static int     g_fun_ret_sp = 0;
-
-static void push_fun_ret(TypeTag t) {
-    if (g_fun_ret_sp >= MAX_FUNCTION_NESTING_DEPTH) {
-        fprintf(stderr, "Erro interno: pilha de tipos de retorno de função excedida\n");
-        exit(EXIT_FAILURE);
-    }
-    g_fun_ret_stack[g_fun_ret_sp++] = t;
-}
-
-static void pop_fun_ret(void) {
-    if (g_fun_ret_sp > 0) g_fun_ret_sp--;
-}
-
-static TypeTag current_fun_ret(void) {
-    return (g_fun_ret_sp > 0) ? g_fun_ret_stack[g_fun_ret_sp - 1] : TY_VOID;
-}
-
-/* Buffers temporários para parâmetros de função */
+/* Buffers temporários (parâmetros de função) */
 static Node  **g_params_buf = NULL;
 static size_t  g_params_len = 0;
 %}
@@ -261,42 +99,15 @@ Stmt
     | WhileStmt                             { $$ = $1; }
     | ForStmt                               { $$ = $1; }
     | FunctionDef                           { $$ = $1; }
-    | RETURN SEMICOLON                      {
-                                                if (current_fun_ret() != TY_VOID) {
-                                                    yyerror("Erro semântico: retorno vazio em função não-void");
-                                                    YYERROR;
-                                                }
-                                                $$ = ast_return(NULL);
-                                            }
-    | RETURN Expr SEMICOLON                 {
-                                                TypeTag wanted_type = current_fun_ret();
-                                                TypeTag got_type = infer_type($2);
-
-                                                if (wanted_type == TY_VOID) {
-                                                    yyerror("Erro semântico: return com valor em função void");
-                                                    YYERROR;
-                                                }
-
-                                                bool ok = (wanted_type == got_type) ||
-                                                          (is_numeric(wanted_type) && is_numeric(got_type));
-
-                                                if (!ok) {
-                                                    yyerror("Erro semântico: tipo de retorno incompatível");
-                                                    ast_free($2);
-                                                    YYERROR;
-                                                }
-
-                                                $$ = ast_return($2);
-                                            }
+    | RETURN SEMICOLON                      { $$ = ast_return(NULL); }
+    | RETURN Expr SEMICOLON                 { $$ = ast_return($2); }
     | SEMICOLON                             { $$ = NULL; }
     | ERROR                                 { yyerrok; $$ = NULL; }  /* consome erro léxico isolado */
     | error SEMICOLON                       { yyerror("recuperado: instrução inválida"); yyerrok; $$ = NULL; }
     ;
 
 Block
-    : LBRACE                                { push_scope(); }
-      StmtList
-      RBRACE                                { pop_scope(); $$ = $3; }
+    : LBRACE StmtList RBRACE                { $$ = $2; }
     ;
 
 TypeTag
@@ -308,117 +119,42 @@ TypeTag
   ;
 
 Decl
-  : TypeTag IDENT ASSIGN Expr SEMICOLON     {
-                                                SymbolTable *sc = current_scope();
-                                                if (st_lookup(sc, $2)) {
-                                                    yyerror("Erro semântico: variável já declarada neste escopo");
-                                                    ast_free($4); free($2); YYERROR;
-                                                }
-
-                                                TypeTag inferred_type = infer_type($4);
-                                                bool compatible_types =
-                                                    (inferred_type == $1) ||
-                                                    (is_numeric(inferred_type) && is_numeric($1));
-
-                                                if (!compatible_types) {
-                                                    yyerror("Erro semântico: tipo incompatível na inicialização");
-                                                    ast_free($4); free($2); YYERROR;
-                                                }
-
-                                                $$ = ast_decl($1, $2, $4);
-                                                insert_variable($2, $1, ast_copy($4));
-                                                free($2);
-                                            }
-  | TypeTag IDENT SEMICOLON                 {
-                                                SymbolTable *sc = current_scope();
-                                                if (st_lookup(sc, $2)) {
-                                                    yyerror("Erro semântico: variável já declarada neste escopo");
-                                                    free($2); YYERROR;
-                                                }
-
-                                                $$ = ast_decl($1, $2, NULL);
-                                                insert_variable($2, $1, default_value_for($1));
-                                                free($2);
-                                            }
+  : TypeTag IDENT ASSIGN Expr SEMICOLON     { $$ = ast_decl($1, $2, $4); free($2); }
+  | TypeTag IDENT SEMICOLON                 { $$ = ast_decl($1, $2, NULL); free($2); }
   ;
 
 IfStmt
-  : IF LPAREN Expr RPAREN Stmt %prec IFX    {
-                                                if (infer_type($3) != TY_BOOL) {
-                                                    yyerror("Erro semântico: condição do if deve ser bool");
-                                                    ast_free($3); ast_free($5); YYERROR;
-                                                }
-                                                $$ = ast_if($3, $5, NULL);
-                                            }
-  | IF LPAREN Expr RPAREN Stmt ELSE Stmt    {
-                                                if (infer_type($3) != TY_BOOL) {
-                                                    yyerror("Erro semântico: condição do if deve ser bool");
-                                                    ast_free($3); ast_free($5); ast_free($7); YYERROR;
-                                                }
-                                                $$ = ast_if($3, $5, $7);
-                                            }
+  : IF LPAREN Expr RPAREN Stmt %prec IFX    { $$ = ast_if($3, $5, NULL); }
+  | IF LPAREN Expr RPAREN Stmt ELSE Stmt    { $$ = ast_if($3, $5, $7); }
   ;
 
 WhileStmt
-    : WHILE LPAREN Expr RPAREN Stmt         {
-                                                if (infer_type($3) != TY_BOOL) {
-                                                    yyerror("Erro semântico: condição do while deve ser bool");
-                                                    ast_free($3); ast_free($5); YYERROR;
-                                                }
-
-                                                $$ = ast_while($3, $5);
-                                            }
+    : WHILE LPAREN Expr RPAREN Stmt         { $$ = ast_while($3, $5); }
     ;
 
 ForStmt
     : FOR LPAREN Expr SEMICOLON Expr SEMICOLON Expr RPAREN Stmt
-                                            {
-                                              if (infer_type($5) != TY_BOOL) {
-                                                  yyerror("Erro semântico: condição do for deve ser bool");
-                                                  ast_free($3); ast_free($5); ast_free($7); ast_free($9); YYERROR;
-                                              }
-
-                                              $$ = ast_for($3, $5, $7, $9);
-                                            }
+                                            { $$ = ast_for($3, $5, $7, $9); }
     ;
 
 FunctionDef
-    : TypeTag IDENT LPAREN ParamList RPAREN
-                                            {
-                                              push_fun_ret($1);
-                                              push_scope();
-
+  : TypeTag IDENT LPAREN ParamList RPAREN   {
                                               Node *plist = $4;
                                               g_params_len = plist->u.as_block.count;
-
-                                              if(g_params_len > 0) {
+                                              if (g_params_len > 0) {
                                                 g_params_buf = (Node**)xmalloc(sizeof(Node*) * g_params_len);
-
                                                 for (size_t i = 0; i < g_params_len; i++) {
-                                                  Node *pd = plist->u.as_block.stmts[i];
-                                                  g_params_buf[i] = pd;
-                                                  insert_variable(pd->u.as_decl.name,
-                                                                  pd->u.as_decl.type,
-                                                                  default_value_for(pd->u.as_decl.type));
+                                                  g_params_buf[i] = plist->u.as_block.stmts[i];
                                                 }
-                                              } else {
-                                                g_params_buf = NULL;
-                                              }
-
-                                              free(plist->u.as_block.stmts);
-                                              free(plist);
+                                              } else { g_params_buf = NULL; }
+                                              free(plist->u.as_block.stmts); free(plist);
                                             }
-
                                             Block
                                             {
-                                              Node *body = $7;
-                                              $$ = ast_function($1, $2, g_params_buf, g_params_len, body);
+                                              $$ = ast_function($1, $2, g_params_buf, g_params_len, $7);
                                               g_params_buf = NULL; g_params_len = 0;
-
-                                              pop_scope();
-                                              pop_fun_ret();
                                             }
-    ;
+  ;
 
 Param
     : TypeTag IDENT                         { $$ = ast_decl($1, $2, NULL); free($2); }
@@ -442,36 +178,7 @@ Expr
 
 AssignExpr
     : OrExpr
-    | IDENT ASSIGN AssignExpr               {
-                                                bool found = false;
-                                                TypeTag var_type = st_lookup_type_recursive(current_scope(), $1, &found);
-                                                if (!found) {
-                                                    yyerror("Erro semântico: variável não declarada");
-                                                    ast_free($3); free($1); YYERROR;
-                                                }
-
-                                                TypeTag inferred_type = infer_type($3);
-
-                                                bool compatible_types =
-                                                    (var_type == inferred_type) ||
-                                                    (is_numeric(var_type) && is_numeric(inferred_type));
-
-                                                if (!compatible_types) {
-                                                    yyerror("Erro semântico: tipos incompatíveis na atribuição");
-                                                    ast_free($3); free($1); YYERROR;
-                                                }
-
-                                                Node *right_expr =
-                                                    ($3 && $3->kind == ND_ASSIGN) ? $3->u.as_assign.value : $3;
-
-                                                if (!st_update_recursive(current_scope(), $1, ast_copy(right_expr))) {
-                                                    yyerror("Erro semântico: falha ao atualizar variável");
-                                                    ast_free($3); free($1); YYERROR;
-                                                }
-
-                                                $$ = ast_assign($1, $3);
-                                                free($1);
-                                            }
+    | IDENT ASSIGN AssignExpr               { $$ = ast_assign($1, $3); free($1); }
     ;
 
 OrExpr

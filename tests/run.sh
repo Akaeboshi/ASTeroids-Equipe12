@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 # Runner de testes — varre tests/*/{ok,err} e roda tudo em ordem fixa.
-# Usa .in como entrada e compara APENAS a "AST (Formatada)" com .golden (se existir).
-# Ordem: syntax → semantic → intermediate → generate
+# Suítes suportadas: syntax → semantic → intermediate → generate
+# Regras:
+#  - syntax: roda src/parser, extrai "AST (Formatada)" e compara com .golden (se existir)
+#  - semantic (e outras): roda o binário da suíte e valida só pelo exit code
 # Suporta cores e emojis (com fallback).
+#
+# Uso:
+#  ./run.sh           # Executa todas as suítes na ordem padrão
+#  ./run.sh SUITE...  # Executa apenas as suítes especificadas (ex.: ./run.sh syntax semantic)
 
 set -u -o pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
-BIN="${ROOT_DIR}/src/parser"
 
 # ------------------------------------------------------------------------------
 # Cores e estilos
@@ -32,6 +37,23 @@ OK_EMOJI="🟢"
 ERR_EMOJI="🔴"
 
 # ------------------------------------------------------------------------------
+# Seleção de binário por suíte
+# ------------------------------------------------------------------------------
+bin_for_suite() {
+  case "$1" in
+    syntax)       echo "${ROOT_DIR}/src/parser" ;;
+    semantic)     echo "${ROOT_DIR}/src/semacheck" ;;
+    intermediate) echo "${ROOT_DIR}/src/intermediate" ;;
+    generate|generation) echo "${ROOT_DIR}/src/generate" ;;
+    *)            echo "${ROOT_DIR}/src/parser" ;;
+  esac
+}
+
+# Variáveis globais para a suíte corrente
+CURRENT_SUITE=""
+BIN=""
+
+# ------------------------------------------------------------------------------
 # Funções utilitárias
 # ------------------------------------------------------------------------------
 line() { printf "%s\n" "────────────────────────────────────────────────────────"; }
@@ -50,7 +72,6 @@ suite_title() {
 # Extrai apenas a AST formatada (linhas após o cabeçalho)
 extract_pretty() {
   # STDIN => saída do parser
-  # remove CR, drop linhas vazias iniciais, corta a partir do cabeçalho, remove o cabeçalho, garante newline final
   sed -e 's/\r$//' -e '/./,$!d' \
     | awk 'found{print} /^=== AST \(Formatada\) ===$/{found=1}' \
     | sed -e '1{/^=== AST (Formatada) ===$/d;}' -e '$a\'
@@ -64,14 +85,6 @@ suite_has_files() {
   [[ ${#ok_files[@]} -gt 0 || ${#err_files[@]} -gt 0 ]]
 }
 
-# ------------------------------------------------------------------------------
-# Sanity check
-# ------------------------------------------------------------------------------
-if [[ ! -x "$BIN" ]]; then
-  echo "${RED}ERRO:${RESET} binário não encontrado: $BIN" >&2
-  exit 2
-fi
-
 pass=0
 fail=0
 
@@ -82,6 +95,7 @@ run_ok_case() {
 
   local out; out="$("$BIN" "$file" 2>&1)"
   local status=$?
+
   if [[ $status -ne 0 ]]; then
     printf "%b %s%s%s (esperado sucesso) → retorno %d\n" "$ERR_EMOJI" "$RED" "$base" "$RESET" "$status"
     echo "$out"
@@ -89,34 +103,38 @@ run_ok_case() {
     return
   fi
 
-  # extrai apenas a AST formatada
-  local pretty
-  pretty="$(printf "%s" "$out" | extract_pretty)"
+  if [[ "$CURRENT_SUITE" == "syntax" ]]; then
+    # extrai apenas a AST formatada e compara golden (se existir)
+    local pretty
+    pretty="$(printf "%s" "$out" | extract_pretty)"
 
-  # preview opcional
-  if [[ "${SHOW_PRETTY:-0}" != "0" ]]; then
-    echo
-    echo "${DIM}--- PREVIEW (${base}) ---${RESET}"
-    printf "%s" "$pretty"
-    echo "${DIM}--- FIM PREVIEW ---${RESET}"
-  fi
-
-  if [[ -f "$golden" ]]; then
-    # normaliza golden idem (newline final)
-    diff -u --strip-trailing-cr \
-      <(sed -e '$a\' "$golden") \
-      <(printf "%s\n" "$pretty") \
-      > /tmp/diff.$$ 2>&1
-    if [[ $? -eq 0 ]]; then
-      printf "%b %s%s%s (bateu com golden)\n" "$OK_EMOJI" "$GREEN" "$base" "$RESET"
-      ((pass++))
-    else
-      printf "%b %s%s%s (divergiu do golden)\n" "$ERR_EMOJI" "$RED" "$base" "$RESET"
-      cat /tmp/diff.$$
-      ((fail++))
+    if [[ "${SHOW_PRETTY:-0}" != "0" ]]; then
+      echo
+      echo "${DIM}--- PREVIEW (${base}) ---${RESET}"
+      printf "%s" "$pretty"
+      echo "${DIM}--- FIM PREVIEW ---${RESET}"
     fi
-    rm -f /tmp/diff.$$ || true
+
+    if [[ -f "$golden" ]]; then
+      diff -u --strip-trailing-cr \
+        <(sed -e '$a\' "$golden") \
+        <(printf "%s\n" "$pretty") \
+        > /tmp/diff.$$ 2>&1
+      if [[ $? -eq 0 ]]; then
+        printf "%b %s%s%s (bateu com golden)\n" "$OK_EMOJI" "$GREEN" "$base" "$RESET"
+        ((pass++))
+      else
+        printf "%b %s%s%s (divergiu do golden)\n" "$ERR_EMOJI" "$RED" "$base" "$RESET"
+        cat /tmp/diff.$$
+        ((fail++))
+      fi
+      rm -f /tmp/diff.$$ || true
+    else
+      printf "%b %s%s%s (Passou como esperado)\n" "$OK_EMOJI" "$GREEN" "$base" "$RESET"
+      ((pass++))
+    fi
   else
+    # suites não-syntax: apenas status importa
     printf "%b %s%s%s (Passou como esperado)\n" "$OK_EMOJI" "$GREEN" "$base" "$RESET"
     ((pass++))
   fi
@@ -146,6 +164,16 @@ run_suite() {
   [[ -d "$suite_dir" ]] || return 0
   suite_has_files "$ok_dir" "$err_dir" || return 0
 
+  # Seleciona binário por suíte
+  CURRENT_SUITE="$suite_name"
+  BIN="$(bin_for_suite "$suite_name")"
+
+  if [[ ! -x "$BIN" ]]; then
+    echo "${YELLOW}Aviso:${RESET} binário não encontrado para '${suite_name}': $BIN"
+    echo "Compile antes (ex.: make). Pulando a suíte '${suite_name}'."
+    return 0
+  fi
+
   echo
   line
   printf "%s %s\n" "$(suite_title "$suite_name")" "${DIM}(${suite_name})${RESET}"
@@ -170,7 +198,13 @@ run_suite() {
 # Execução
 # ------------------------------------------------------------------------------
 echo "${BOLD}Executando testes…${RESET}"
-ordered_suites=(syntax semantic intermediate generate)
+
+if [[ $# -gt 0 ]]; then
+  ordered_suites=("$@")
+else
+  ordered_suites=(syntax semantic intermediate generate)
+fi
+
 for suite_name in "${ordered_suites[@]}"; do
   run_suite "$suite_name"
 done

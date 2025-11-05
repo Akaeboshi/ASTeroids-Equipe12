@@ -8,14 +8,20 @@
 *.so
 *.dll
 
+# Binários gerados pelo Makefile
+src/parser
+src/semacheck
+
 # Flex/Bison intermediários
 *.tab.c
 *.tab.h
 *.yy.c
 *.output
-parser
+parser.tab.c
+parser.tab.h
+lex.yy.c
 
-# Build directories
+# Diretórios de build
 /build/
 /bin/
 /dist/
@@ -52,3 +58,21 @@ env/
 .DS_Store
 .AppleDouble
 .LSOverride
+Icon?
+# Arquivos temporários de volume do Finder
+._*
+
+# ==============================
+# Linux
+# ==============================
+*~
+.nfs*
+
+# ==============================
+# Windows
+# ==============================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
