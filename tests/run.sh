@@ -5,6 +5,10 @@
 #  - syntax: roda src/parser, extrai "AST (Formatada)" e compara com .golden (se existir)
 #  - semantic (e outras): roda o binário da suíte e valida só pelo exit code
 # Suporta cores e emojis (com fallback).
+#
+# Uso:
+#  ./run.sh           # Executa todas as suítes na ordem padrão
+#  ./run.sh SUITE...  # Executa apenas as suítes especificadas (ex.: ./run.sh syntax semantic)
 
 set -u -o pipefail
 
