@@ -107,16 +107,14 @@ Node *ast_decl(TypeTag type, const char *name, Node *init) {
 }
 
 Node *ast_while(Node *cond, Node *body) {
-    Node *n = xmalloc(sizeof(Node));
-    n->kind = ND_WHILE;
+    Node *n = new_node(ND_WHILE);
     n->u.as_while.cond = cond;
     n->u.as_while.body = body;
     return n;
 }
 
 Node *ast_for(Node *init, Node *cond, Node *step, Node *body) {
-    Node *n = xmalloc(sizeof(Node));
-    n->kind = ND_FOR;
+    Node *n = new_node(ND_FOR);
     n->u.as_for.init = init;
     n->u.as_for.cond = cond;
     n->u.as_for.step = step;
@@ -125,8 +123,7 @@ Node *ast_for(Node *init, Node *cond, Node *step, Node *body) {
 }
 
 Node *ast_function(TypeTag ret_type, char *name, Node **params, size_t param_count, Node *body) {
-    Node *n = (Node*)xmalloc(sizeof(Node));
-    n->kind = ND_FUNCTION;
+    Node *n = new_node(ND_FUNCTION);
     n->u.as_function.ret_type    = ret_type;
     n->u.as_function.name        = name;
     n->u.as_function.params      = params;
@@ -136,8 +133,15 @@ Node *ast_function(TypeTag ret_type, char *name, Node **params, size_t param_cou
 }
 
 Node *ast_return(Node *expr) {
-    Node *n = (Node*)xmalloc(sizeof(Node));
-    n->kind = ND_RETURN;
+    Node *n = new_node(ND_RETURN);
     n->u.as_return.expr = expr;
+    return n;
+}
+
+Node *ast_call(const char *name, Node **args, size_t arg_count) {
+    Node *n = new_node(ND_CALL);
+    n->u.as_call.name = xstrdup(name);
+    n->u.as_call.args = args;
+    n->u.as_call.arg_count = arg_count;
     return n;
 }

@@ -159,6 +159,17 @@ if(!node) { printf("NULL"); return; }
       }
       printf(";");
       break;
+
+    case ND_CALL: {
+      printf("%s(", node->u.as_call.name);
+      for (size_t i = 0; i < node->u.as_call.arg_count; i++) {
+        print(node->u.as_call.args[i]);
+        if (i + 1 < node->u.as_call.arg_count) printf(", ");
+      }
+      printf(")");
+      break;
+    }
+
   }
 }
 
@@ -286,6 +297,16 @@ static void print_pretty(const Node *node, int depth) {
         for (int i = 0; i < depth + 2; i++) putchar(' ');
         printf("Expr:\n");
         print_pretty(node->u.as_return.expr, depth + 4);
+      }
+      break;
+
+    case ND_CALL:
+      printf("Call(%s)\n", node->u.as_call.name);
+      if (node->u.as_call.arg_count > 0) {
+        indent(depth + 2); printf("Args:\n");
+        for (size_t i = 0; i < node->u.as_call.arg_count; i++) {
+          print_pretty(node->u.as_call.args[i], depth + 4);
+        }
       }
       break;
   }

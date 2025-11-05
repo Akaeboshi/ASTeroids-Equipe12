@@ -83,6 +83,16 @@ void ast_free(Node *node) {
     case ND_RETURN:
       if (node->u.as_return.expr) ast_free(node->u.as_return.expr);
       break;
+
+    case ND_CALL:
+      if (node->u.as_call.args) {
+        for (size_t i = 0; i < node->u.as_call.arg_count; i++) {
+          ast_free(node->u.as_call.args[i]);
+        }
+        free(node->u.as_call.args);
+      }
+      free(node->u.as_call.name);
+      break;
   }
 
   free(node);

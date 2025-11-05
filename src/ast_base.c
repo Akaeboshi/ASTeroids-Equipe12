@@ -119,7 +119,19 @@ Node *ast_copy(Node *node) {
       case ND_RETURN:
         copy->u.as_return.expr = ast_copy(node->u.as_return.expr);
         break;
-    }
 
+      case ND_CALL:
+        copy->u.as_call.name      = xstrdup(node->u.as_call.name);
+        copy->u.as_call.arg_count = node->u.as_call.arg_count;
+
+        if (node->u.as_call.arg_count > 0) {
+            copy->u.as_call.args = xmalloc(sizeof(Node*) * node->u.as_call.arg_count);
+            for (size_t i = 0; i < node->u.as_call.arg_count; i++)
+                copy->u.as_call.args[i] = ast_copy(node->u.as_call.args[i]);
+        } else {
+            copy->u.as_call.args = NULL;
+        }
+        break;
+    }
     return copy;
 }
