@@ -3,6 +3,10 @@
 %x COMMENT
 
 %{
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wsign-compare"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
