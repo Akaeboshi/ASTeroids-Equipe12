@@ -1,0 +1,17 @@
+Block
+  Function(int foo)
+    Params:
+      Decl(int a)
+      Decl(float b)
+    Body:
+      Block
+        Return
+          Expr:
+            Ident(a)
+  Decl(int x)
+  Expression
+    Assign(x)
+      Call(foo)
+        Args:
+          Int(3)
+          Float(1.5)

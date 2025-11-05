@@ -1,0 +1,3 @@
+void log(int a) { return; }
+int x;
+x = log(1);   // usar retorno void em expressão
