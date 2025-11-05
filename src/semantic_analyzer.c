@@ -129,30 +129,11 @@ static TypeTag infer(Node *n, int *errors) {
 
         /* >>> NOVO: validar atribuição mesmo no modo expressão */
         case ND_ASSIGN: {
-            const char *name = n->u.as_assign.name;
-            TypeTag lhs_t;
-            if (!lookup_type(name, &lhs_t)) {
-                fprintf(stderr, "Erro semântico: variável '%s' não declarada\n", name);
-                (*errors)++;
-                /* Ainda inferimos RHS para propagar erros internos */
-            }
-            TypeTag rt = infer(n->u.as_assign.value, errors);
-            if (lhs_t != TY_INVALID) {
-                if (!(rt==lhs_t || (is_numeric(rt)&&is_numeric(lhs_t)))) {
-                    fprintf(stderr, "Erro semântico: tipos incompatíveis na atribuição a '%s'\n", name);
-                    (*errors)++;
-                }
-            }
-            return rt; /* tipo da expressão de atribuição é o do RHS */
+            check_assign(n, errors);
+            return infer(n->u.as_assign.value, errors); /* tipo da expressão de atribuição é o do RHS */
         }
 
         case ND_EXPR:
-            /* >>> NOVO: se a expressão for uma atribuição, checar explicitamente */
-            if (n->u.as_expr.expr && n->u.as_expr.expr->kind == ND_ASSIGN) {
-                check_assign(n->u.as_expr.expr, errors);
-                /* e ainda retorna o tipo para composição */
-                return infer(n->u.as_expr.expr->u.as_assign.value, errors);
-            }
             return infer(n->u.as_expr.expr, errors);
 
         default:
@@ -299,4 +280,8 @@ int check_semantics(Node *ast_root, SymbolTable *table) {
     pop_scope();
 
     return errors;
+}
+
+int semantics_ok(Node *root, SymbolTable *table) {
+    return check_semantics(root, table) == 0 ? 1 : 0;
 }
