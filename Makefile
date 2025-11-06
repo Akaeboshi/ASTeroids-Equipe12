@@ -8,8 +8,9 @@ TEST_DIR    := tests
 # -----------------------------
 # Executáveis
 # -----------------------------
-EXEC_SYNTAX := $(SRC_DIR)/parser
-EXEC_SEMA   := $(SRC_DIR)/semacheck
+EXEC_LEXER    := $(SRC_DIR)/scanner
+EXEC_SYNTAX   := $(SRC_DIR)/parser
+EXEC_SEMANTIC := $(SRC_DIR)/analyzer
 
 # -----------------------------
 # Fontes comuns (AST + tabela)
@@ -25,9 +26,11 @@ COMMON_SRCS := $(SRC_DIR)/symbol_table.c
 # -----------------------------
 # Mains
 # -----------------------------
-MAIN_SYNTAX := $(SRC_DIR)/main_syntax.c
-MAIN_SEMA   := $(SRC_DIR)/main_semantic.c
-SEMA_ANALYZER := $(SRC_DIR)/semantic_analyzer.c
+MAIN_LEXER        := $(SRC_DIR)/lexer_driver.c
+MAIN_SYNTAX       := $(SRC_DIR)/main_syntax.c
+MAIN_SEMANTIC     := $(SRC_DIR)/main_semantic.c
+SEMANTIC_ANALYZER := $(SRC_DIR)/semantic_analyzer.c
+SYNTAX_ANALYZER   := $(SRC_DIR)/syntax_analyzer.c
 
 # -----------------------------
 # Bison/Flex
@@ -56,21 +59,29 @@ endif
 # -----------------------------
 # Alvos principais
 # -----------------------------
-.PHONY: all build run test test-syntax test-semantic clean
+.PHONY: all build run test test-syntax test-semantic test-lexer clean
 
 # compila tudo: parser + semacheck
-all: $(EXEC_SYNTAX) $(EXEC_SEMA)
+all: $(EXEC_SYNTAX) $(EXEC_SEMANTIC) $(EXEC_LEXER)
 build: all
 
 # -----------------------------
 # Regras de compilação
 # -----------------------------
-$(EXEC_SYNTAX): $(BISON_C) $(FLEX_C) $(AST_SRCS) $(COMMON_SRCS) $(MAIN_SYNTAX)
-	$(CC) $(CFLAGS) -o $@ $(BISON_C) $(FLEX_C) $(AST_SRCS) $(COMMON_SRCS) $(MAIN_SYNTAX) $(LDFLAGS)
 
-$(EXEC_SEMA): $(BISON_C) $(FLEX_C) $(AST_SRCS) $(COMMON_SRCS) $(SEMA_ANALYZER) $(MAIN_SEMA)
-	$(CC) $(CFLAGS) -o $@ $(BISON_C) $(FLEX_C) $(AST_SRCS) $(COMMON_SRCS) $(SEMA_ANALYZER) $(MAIN_SEMA) $(LDFLAGS)
+# --- LÉXICO (scanner) ---
+$(EXEC_LEXER): $(BISON_C) $(FLEX_C) $(MAIN_LEXER) $(AST_SRCS) $(COMMON_SRCS)
+	$(CC) $(CFLAGS) -o $@ $(BISON_C) $(FLEX_C) $(AST_SRCS) $(COMMON_SRCS) $(MAIN_LEXER) $(LDFLAGS)
 
+# --- SINTÁTICO (parser) ---
+$(EXEC_SYNTAX): $(BISON_C) $(FLEX_C) $(AST_SRCS) $(COMMON_SRCS) $(SYNTAX_ANALYZER) $(MAIN_SYNTAX)
+	$(CC) $(CFLAGS) -o $@ $(BISON_C) $(FLEX_C) $(AST_SRCS) $(COMMON_SRCS) $(SYNTAX_ANALYZER) $(MAIN_SYNTAX) $(LDFLAGS)
+
+# --- SEMÂNTICO (analyzer) ---
+$(EXEC_SEMANTIC): $(BISON_C) $(FLEX_C) $(AST_SRCS) $(COMMON_SRCS) $(SEMANTIC_ANALYZER) $(MAIN_SEMANTIC)
+	$(CC) $(CFLAGS) -o $@ $(BISON_C) $(FLEX_C) $(AST_SRCS) $(COMMON_SRCS) $(SEMANTIC_ANALYZER) $(MAIN_SEMANTIC) $(LDFLAGS)
+
+# --- GERAÇÃO DOS ARQUIVOS DE BISON E FLEX ---
 $(BISON_C) $(BISON_H): $(BISON_FILE)
 	bison $(BISON_FLAGS) -o $(BISON_C) $(BISON_FILE)
 
@@ -92,16 +103,20 @@ run: $(EXEC_SYNTAX)
 # -----------------------------
 # Testes
 # -----------------------------
-# test ⇒ roda TUDO (deixa o run.sh decidir as suítes existentes)
+# test -> roda TUDO (deixa o run.sh decidir as suítes existentes)
 test: build
 	@bash $(TEST_DIR)/run.sh
 
-# test-syntax ⇒ só sintaxe
+# test-lexer -> só lexer
+test-lexer: $(EXEC_LEXER)
+	@bash $(TEST_DIR)/run.sh lexer
+
+# test-syntax -> só sintaxe
 test-syntax: $(EXEC_SYNTAX)
 	@bash $(TEST_DIR)/run.sh syntax
 
-# test-semantic ⇒ só semântica
-test-semantic: $(EXEC_SEMA)
+# test-semantic -> só semântica
+test-semantic: $(EXEC_SEMANTIC)
 	@bash $(TEST_DIR)/run.sh semantic
 
 # -----------------------------
@@ -109,4 +124,4 @@ test-semantic: $(EXEC_SEMA)
 # -----------------------------
 clean:
 	@echo "Limpando artefatos…"
-	@rm -f $(EXEC_SYNTAX) $(EXEC_SEMA) $(BISON_C) $(BISON_H) $(FLEX_C)
+	@rm -f $(EXEC_SYNTAX) $(EXEC_SEMANTIC) $(EXEC_LEXER) $(BISON_C) $(BISON_H) $(FLEX_C)
