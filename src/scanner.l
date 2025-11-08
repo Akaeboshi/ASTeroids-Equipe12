@@ -85,7 +85,7 @@ static char* process_string_literal(const char* text, int len) {
                         return INT_LIT;
                     } /* inteiro */
 
-\"([^\\\n]|(\\.))*\"   {
+\"([^"\\]|\\.)*\"   {
                         yylval.str = process_string_literal(yytext, yyleng);
                         ADVANCE_COLUMN;
                         return STRING_LIT;

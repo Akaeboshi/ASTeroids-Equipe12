@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Runner de testes — varre tests/*/{ok,err} e roda tudo em ordem fixa.
-# Suítes suportadas: syntax → semantic → intermediate → generate
+# Suítes suportadas: lexer → syntax → semantic → intermediate → generate
 # Regras:
-#  - syntax: roda src/parser, extrai "AST (Formatada)" e compara com .golden (se existir)
-#  - semantic (e outras): roda o binário da suíte e valida só pelo exit code
-# Suporta cores e emojis (com fallback).
+#  - lexer: normaliza a saída do driver e compara tokens/mensagens com expected/
+#  - syntax: extrai "AST (Formatada)" e compara com .golden (se existir)
+#  - semantic (e outras): valida apenas pelo exit code
 #
 # Uso:
-#  ./run.sh           # Executa todas as suítes na ordem padrão
-#  ./run.sh SUITE...  # Executa apenas as suítes especificadas (ex.: ./run.sh syntax semantic)
+#  ./run.sh             # Executa todas as suítes na ordem padrão
+#  ./run.sh SUITE ...   # Executa apenas as suítes especificadas (ex.: ./run.sh lexer syntax)
 
 set -u -o pipefail
 
@@ -27,6 +27,7 @@ fi
 # ------------------------------------------------------------------------------
 # Emojis por tipo de teste
 # ------------------------------------------------------------------------------
+EMOJI_LEXER="🔤"
 EMOJI_SYNTAX="🧩"
 EMOJI_SEMANTIC="🧠"
 EMOJI_INTERMEDIATE="🏗️"
@@ -41,11 +42,12 @@ ERR_EMOJI="🔴"
 # ------------------------------------------------------------------------------
 bin_for_suite() {
   case "$1" in
-    syntax)       echo "${ROOT_DIR}/src/parser" ;;
-    semantic)     echo "${ROOT_DIR}/src/semacheck" ;;
-    intermediate) echo "${ROOT_DIR}/src/intermediate" ;;
+    lex|lexer)          echo "${ROOT_DIR}/src/scanner" ;;
+    syntax)             echo "${ROOT_DIR}/src/parser" ;;
+    semantic)           echo "${ROOT_DIR}/src/analyzer" ;;
+    intermediate)       echo "${ROOT_DIR}/src/intermediate" ;;
     generate|generation) echo "${ROOT_DIR}/src/generate" ;;
-    *)            echo "${ROOT_DIR}/src/parser" ;;
+    *)                  echo "${ROOT_DIR}/src/parser" ;;
   esac
 }
 
@@ -61,11 +63,12 @@ line() { printf "%s\n" "──────────────────�
 suite_title() {
   local raw="$1"
   case "$raw" in
-    syntax)       echo "${EMOJI_SYNTAX}  ${BOLD}Syntax Analysis${RESET}" ;;
-    semantic)     echo "${EMOJI_SEMANTIC}  ${BOLD}Semantic Analysis${RESET}" ;;
-    intermediate) echo "${EMOJI_INTERMEDIATE}  ${BOLD}Intermediate Representation${RESET}" ;;
+    lex|lexer)          echo "${EMOJI_LEXER}  ${BOLD}Lexical Analysis${RESET}" ;;
+    syntax)             echo "${EMOJI_SYNTAX}  ${BOLD}Syntax Analysis${RESET}" ;;
+    semantic)           echo "${EMOJI_SEMANTIC}  ${BOLD}Semantic Analysis${RESET}" ;;
+    intermediate)       echo "${EMOJI_INTERMEDIATE}  ${BOLD}Intermediate Representation${RESET}" ;;
     generate|generation) echo "${EMOJI_GENERATION}  ${BOLD}Code Generation${RESET}" ;;
-    *)            echo "${EMOJI_DEFAULT}  ${BOLD}${raw^}${RESET}" ;;
+    *)                  echo "${EMOJI_DEFAULT}  ${BOLD}${raw^}${RESET}" ;;
   esac
 }
 
@@ -88,6 +91,9 @@ suite_has_files() {
 pass=0
 fail=0
 
+# ------------------------------------------------------------------------------
+# Casos genéricos (syntax/semantic/…)
+# ------------------------------------------------------------------------------
 run_ok_case() {
   local file="$1"            # .../ok_XXXX_nome.in
   local base; base="$(basename "$file")"
@@ -116,11 +122,7 @@ run_ok_case() {
     fi
 
     if [[ -f "$golden" ]]; then
-      diff -u --strip-trailing-cr \
-        <(sed -e '$a\' "$golden") \
-        <(printf "%s\n" "$pretty") \
-        > /tmp/diff.$$ 2>&1
-      if [[ $? -eq 0 ]]; then
+      if diff -u --strip-trailing-cr <(sed -e '$a\' "$golden") <(printf "%s\n" "$pretty") > /tmp/diff.$$ 2>&1; then
         printf "%b %s%s%s (bateu com golden)\n" "$OK_EMOJI" "$GREEN" "$base" "$RESET"
         ((pass++))
       else
@@ -156,6 +158,82 @@ run_err_case() {
   fi
 }
 
+# ------------------------------------------------------------------------------
+# Casos específicos do LÉXICO (normaliza tokens/mensagens)
+# ------------------------------------------------------------------------------
+run_ok_case_lex() {
+  local file="$1"                        # tests/lexer/ok/ok_*.in
+  local base; base="$(basename "$file")" # ok_*.in
+  local name="${base%.in}"               # ok_*
+  local expected="${ok_dir}/${name}.tokens"
+  local tmp="/tmp/${name}.out.$$"
+
+  local out; out="$("$BIN" < "$file" 2>&1)"
+  local status=$?
+
+  if [[ $status -ne 0 ]]; then
+    printf "%b %s%s%s (esperado sucesso) → retorno %d\n" "$ERR_EMOJI" "$RED" "$base" "$RESET" "$status"
+    echo "$out"
+    ((fail++)); return
+  fi
+
+  # NORMALIZA: extrai só o nome do token da linha "Token: NAME | ..."
+  printf "%s\n" "$out" \
+    | awk '/^Token:/ {print $2} /^Erro lexico/ {print "ERROR"}' \
+    > "$tmp"
+
+  if [[ -f "$expected" ]]; then
+    if diff -u --strip-trailing-cr "$expected" "$tmp" > /tmp/diff.$$ 2>&1; then
+      printf "%b %s%s%s (tokens OK)\n" "$OK_EMOJI" "$GREEN" "$base" "$RESET"
+      ((pass++))
+    else
+      printf "%b %s%s%s (tokens divergiram)\n" "$ERR_EMOJI" "$RED" "$base" "$RESET"
+      cat /tmp/diff.$$
+      ((fail++))
+    fi
+    rm -f /tmp/diff.$$ || true
+  else
+    printf "%b %s%s%s (Passou, mas expected .tokens não existe)\n" "$YELLOW" "$base" "$RESET" ""
+    ((pass++))
+  fi
+
+  rm -f "$tmp" || true
+}
+
+run_err_case_lex() {
+  local file="$1"                        # tests/lexer/err/err_*.in
+  local base; base="$(basename "$file")" # err_*.in
+  local name="${base%.in}"               # err_*
+  local expected="${err_dir}/${name}.tokens"
+  local tmp="/tmp/${name}.out.$$"
+
+  local out; out="$("$BIN" < "$file" 2>&1)"
+
+  printf "%s\n" "$out" \
+    | awk '/^Token:/ {print $2} /^Erro lexico/ {print "ERROR"}' \
+    > "$tmp"
+
+  if [[ -f "$expected" ]]; then
+    if diff -u --strip-trailing-cr "$expected" "$tmp" > /tmp/diff.$$ 2>&1; then
+      printf "%b %s%s%s (Falhou como esperado)\n" "$OK_EMOJI" "$GREEN" "$base" "$RESET"
+      ((pass++))
+    else
+      printf "%b %s%s%s (mensagem de erro divergente)\n" "$ERR_EMOJI" "$RED" "$base" "$RESET"
+      cat /tmp/diff.$$
+      ((fail++))
+    fi
+    rm -f /tmp/diff.$$ || true
+  else
+    printf "%b %s%s%s (Expected .out não encontrado)\n" "$YELLOW" "$base" "$RESET" ""
+    ((pass++))
+  fi
+
+  rm -f "$tmp" || true
+}
+
+# ------------------------------------------------------------------------------
+# Execução de uma suíte
+# ------------------------------------------------------------------------------
 run_suite() {
   local suite_name="$1"
   local suite_dir="$ROOT_DIR/tests/$suite_name"
@@ -164,7 +242,6 @@ run_suite() {
   [[ -d "$suite_dir" ]] || return 0
   suite_has_files "$ok_dir" "$err_dir" || return 0
 
-  # Seleciona binário por suíte
   CURRENT_SUITE="$suite_name"
   BIN="$(bin_for_suite "$suite_name")"
 
@@ -181,6 +258,24 @@ run_suite() {
 
   shopt -s nullglob
   local f
+
+  # Léxico: tratamento próprio
+  if [[ "$CURRENT_SUITE" == "lex" || "$CURRENT_SUITE" == "lexer" ]]; then
+    for f in "$ok_dir"/ok_*.in; do
+      [[ -e "$f" ]] || break
+      run_ok_case_lex "$f"
+    done
+
+    echo
+    printf "%sERR (devem falhar)%s\n" "$YELLOW" "$RESET"
+    for f in "$err_dir"/err_*.in; do
+      [[ -e "$f" ]] || break
+      run_err_case_lex "$f"
+    done
+    return
+  fi
+
+  # Demais suítes
   for f in "$ok_dir"/ok_*.in; do
     [[ -e "$f" ]] || break
     run_ok_case "$f"
@@ -202,7 +297,7 @@ echo "${BOLD}Executando testes…${RESET}"
 if [[ $# -gt 0 ]]; then
   ordered_suites=("$@")
 else
-  ordered_suites=(syntax semantic intermediate generate)
+  ordered_suites=(lexer syntax semantic intermediate generate)
 fi
 
 for suite_name in "${ordered_suites[@]}"; do

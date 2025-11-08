@@ -10,7 +10,10 @@
 
 # Binários gerados pelo Makefile
 src/parser
-src/semacheck
+src/analyzer
+src/scanner
+src/intermediate
+src/generate
 
 # Flex/Bison intermediários
 *.tab.c

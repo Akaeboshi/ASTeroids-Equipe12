@@ -1,10 +1,4 @@
-/* lexer_driver.c
-   Programa de teste para o scanner:
-   - bison -d parser.y  (gera parser.tab.h)
-   - flex scanner.l     (gera lex.yy.c)
-   - gcc lex.yy.c lexer_driver.c -lfl -o lexer_driver
-   - ./lexer_driver < tests/lexer_tests.txt
-*/
+/* lexer_driver.c */
 
 #include <stdio.h>
 #include <string.h>
@@ -22,6 +16,11 @@ const char *token_name(int t) {
         case FLOAT_LIT: return "FLOAT_LIT";
         case BOOL_LIT: return "BOOL_LIT";
         case STRING_LIT: return "STRING_LIT";
+        case KW_INT:     return "KW_INT";
+        case KW_FLOAT:   return "KW_FLOAT";
+        case KW_BOOL:    return "KW_BOOL";
+        case KW_STRING:  return "KW_STRING";
+        case KW_VOID:    return "KW_VOID";
         case IDENT: return "IDENT";
         case LPAREN: return "LPAREN";
         case RPAREN: return "RPAREN";
@@ -47,8 +46,8 @@ const char *token_name(int t) {
         case ELSE: return "ELSE";
         case WHILE: return "WHILE";
         case FOR: return "FOR";
-        case FUNCTION: return "FUNCTION";
         case RETURN: return "RETURN";
+        case ERROR: return "ERROR";
         default: return "UNKNOWN";
     }
 }
@@ -59,6 +58,14 @@ int main(void) {
         int startcol = yycolumn - yyleng + 1;
         if (startcol < 1) startcol = 1;
         int endcol = yycolumn - 1;
+
+        if (tok == ERROR) {
+
+            printf("Erro lexico (linha %d, coluna %d): '%s'\n",
+                   yylineno, (yycolumn > 0 ? yycolumn : 1), yytext ? yytext : "");
+            continue;
+        }
+
         printf("Token: %-12s | lexeme=\"%s\" | line: %d col: %d-%d\n",
                token_name(tok), yytext ? yytext : "", yylineno, startcol, endcol);
     }
