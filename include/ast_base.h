@@ -30,6 +30,7 @@ typedef enum {
   ND_FOR,       // instrução for
   ND_FUNCTION,  // declaração de função
   ND_RETURN,    // instrução return
+  ND_CALL       // chamada de função
 } NodeKind;
 
 typedef enum {
@@ -79,6 +80,7 @@ struct Node {
     struct { Node *init; Node *cond; Node *step; Node *body; } as_for;
     struct { TypeTag ret_type; char *name; struct Node **params; size_t param_count; struct Node *body; } as_function;
     struct { Node *expr; } as_return;
+    struct { char *name; struct Node **args; size_t arg_count; } as_call;
   } u;
 };
 

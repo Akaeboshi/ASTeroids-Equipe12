@@ -167,9 +167,9 @@ ParamList
     ;
 
 ArgList
-    : %empty                                { $$ = NULL; }
-    | Expr                                  { $$ = $1; }
-    | ArgList COMMA Expr                    { ast_free($3); $$ = $1; }
+    : %empty                                { $$ = ast_block(); }
+    | Expr                                  { $$ = ast_block(); ast_block_add_stmt($$, ast_expr($1)); }
+    | ArgList COMMA Expr                    { ast_block_add_stmt($1, ast_expr($3)); $$ = $1; }
     ;
 
 Expr
@@ -227,7 +227,26 @@ Primary
     : LPAREN Expr RPAREN                    { $$ = $2; }
     | Num                                   { $$ = $1; }
     | IDENT                                 { $$ = ast_ident($1); free($1); }
-    | IDENT LPAREN ArgList RPAREN           { free($1); $$ = NULL; }
+    | IDENT LPAREN ArgList RPAREN           {
+                                              Node *arglist = $3;
+                                              size_t arg_count = arglist->u.as_block.count;
+
+                                              Node **args = NULL;
+                                              if(arg_count > 0) {
+                                                args = (Node**)xmalloc(sizeof(Node*) * arg_count);
+                                                for (size_t i = 0; i < arg_count; i++) {
+                                                  Node *stmt = arglist->u.as_block.stmts[i];
+                                                  args[i] = stmt->u.as_expr.expr;
+                                                  stmt->u.as_expr.expr = NULL;
+                                                }
+                                              }
+
+                                              ast_free(arglist);
+
+                                              $$ = ast_call($1, args, arg_count);
+                                              arglist = NULL; arg_count = 0;
+                                              free($1);
+                                            }
     | STRING_LIT                            { $$ = ast_string($1); free($1); }
     ;
 

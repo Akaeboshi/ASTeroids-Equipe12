@@ -1,0 +1,3 @@
+int x;
+x = f(1);     // chamada antes da definição → hoje seu analisador NÃO pré-declara
+int f(int a) { return a; }

@@ -20,5 +20,6 @@ Node *ast_while(Node *cond, Node *body);
 Node *ast_for(Node *init, Node *cond, Node *step, Node *body);
 Node *ast_function(TypeTag ret_type, char *name, Node **params, size_t param_count, Node *body);
 Node *ast_return(Node *expr);
+Node *ast_call(const char *name, Node **args, size_t arg_count);
 
 #endif /* AST_EXPR_H */

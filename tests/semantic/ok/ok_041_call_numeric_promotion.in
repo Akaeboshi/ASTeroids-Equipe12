@@ -1,0 +1,4 @@
+float sum(float a, float b) { return a; }
+float f;
+int i;
+f = sum(i, 2);  // int → float permitido pelas regras numéricas

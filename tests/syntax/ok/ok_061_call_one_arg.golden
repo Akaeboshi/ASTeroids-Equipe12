@@ -1,0 +1,6 @@
+Block
+  Decl(int x)
+  Expression
+    Call(foo)
+      Args:
+        Ident(x)

@@ -1,0 +1,11 @@
+Block
+  Function(void log)
+    Params:
+      Decl(int n)
+    Body:
+      Block
+        Return
+  Expression
+    Call(log)
+      Args:
+        Int(10)
