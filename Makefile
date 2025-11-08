@@ -26,9 +26,9 @@ COMMON_SRCS := $(SRC_DIR)/symbol_table.c
 # -----------------------------
 # Mains
 # -----------------------------
-MAIN_LEXER        := $(SRC_DIR)/lexer_driver.c
-MAIN_SYNTAX       := $(SRC_DIR)/main_syntax.c
-MAIN_SEMANTIC     := $(SRC_DIR)/main_semantic.c
+MAIN_LEXER        := $(SRC_DIR)/drivers/lexer_driver.c
+MAIN_SYNTAX       := $(SRC_DIR)/drivers/syntax_driver.c
+MAIN_SEMANTIC     := $(SRC_DIR)/drivers/semantic_driver.c
 SEMANTIC_ANALYZER := $(SRC_DIR)/semantic_analyzer.c
 SYNTAX_ANALYZER   := $(SRC_DIR)/syntax_analyzer.c
 

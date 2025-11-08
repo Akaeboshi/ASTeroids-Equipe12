@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "parser.tab.h" /* precisa ter sido gerado por: bison -d parser.y */
+#include "../parser.tab.h" /* precisa ter sido gerado por: bison -d parser.y */
 
 extern int yylex(void);
 extern char *yytext;
