@@ -1,0 +1,3 @@
+int f(int a) { return a; }
+int x;
+x = f(1, 2);

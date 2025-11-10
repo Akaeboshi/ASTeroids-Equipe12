@@ -1,0 +1,5 @@
+Block
+  Decl(int a)
+  Decl(float b)
+  Decl(bool c)
+  Decl(string d)

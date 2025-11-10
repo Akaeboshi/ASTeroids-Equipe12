@@ -1,0 +1,4 @@
+bool x = true;
+bool y = false;
+bool z;
+z = x && (y || !x);

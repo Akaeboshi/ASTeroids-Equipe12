@@ -1,0 +1,9 @@
+Block
+  Decl(int a)
+  Expression
+    Assign(a)
+      Binary(+)
+        Call(foo)
+          Args:
+            Int(1)
+        Int(2)

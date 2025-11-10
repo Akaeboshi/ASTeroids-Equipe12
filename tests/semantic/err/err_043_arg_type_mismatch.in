@@ -1,0 +1,4 @@
+int f(int a, float b) { return a; }
+string s;
+int x;
+x = f(1, s);   // tipo inválido no 2º argumento

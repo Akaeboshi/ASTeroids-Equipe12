@@ -1,0 +1,8 @@
+Block
+  Expression
+    Call(bar)
+      Args:
+        Call(foo)
+          Args:
+            Int(1)
+        Int(2)

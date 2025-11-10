@@ -1,0 +1,2 @@
+void ping(int n) { return; }
+ping(42);

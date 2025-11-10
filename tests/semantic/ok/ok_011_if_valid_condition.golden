@@ -1,0 +1,12 @@
+Block
+  Decl(bool cond)
+    Init:
+      Bool(true)
+  If
+    Cond:
+      Ident(cond)
+    Then:
+      Block
+        Decl(int x)
+          Init:
+            Int(1)
