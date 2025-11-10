@@ -17,6 +17,7 @@ Isso é perfeito para um projeto técnico, pois:
 
 - reduz o risco de falhas acumuladas.
 
-  ## Entregas funcionais e testáveis a cada sprint
+## Entregas funcionais e testáveis a cada sprint
 
-  Essas entregas permitem testes reais e demonstrações progressivas da evolução do compilador.
+Essas entregas permitem testes reais e demonstrações progressivas da evolução do compilador.
+
