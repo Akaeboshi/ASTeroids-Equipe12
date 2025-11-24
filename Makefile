@@ -12,6 +12,7 @@ EXEC_LEXER    := $(SRC_DIR)/scanner
 EXEC_SYNTAX   := $(SRC_DIR)/parser
 EXEC_SEMANTIC := $(SRC_DIR)/analyzer
 EXEC_IR       := $(SRC_DIR)/irgen
+JS_BIN        := $(SRC_DIR)/jsgen
 
 # =============================
 # Fontes comuns (AST + Tabela)
@@ -24,6 +25,11 @@ AST_SRCS := \
 
 COMMON_SRCS := $(SRC_DIR)/symbol_table.c
 
+# Núcleo comum
+CORE_SRCS := \
+  $(AST_SRCS) \
+  $(COMMON_SRCS)
+
 # =============================
 # Analyzers e Drivers
 # =============================
@@ -34,19 +40,32 @@ MAIN_LEXER     := $(SRC_DIR)/drivers/lexer_driver.c
 MAIN_SYNTAX    := $(SRC_DIR)/drivers/syntax_driver.c
 MAIN_SEMANTIC  := $(SRC_DIR)/drivers/semantic_driver.c
 MAIN_IR_DRIVER := $(SRC_DIR)/drivers/ir_driver.c
+MAIN_JS_DRIVER := $(SRC_DIR)/drivers/codegen_js_driver.c
 
 # =============================
-# IR (builder + printer + driver)
+# IR e Codegen Sources
 # =============================
-IR_SRCS := \
+IR_CORE_SRCS := \
   $(SRC_DIR)/ir.c \
   $(SRC_DIR)/ir_builder.c \
-  $(SRC_DIR)/ir_printer.c \
-  $(MAIN_IR_DRIVER) \
+  $(SRC_DIR)/ir_printer.c
+
+# IR completo (irgen)
+IR_SRCS := \
+  $(IR_CORE_SRCS) \
   $(SEMANTIC_ANALYZER) \
   $(SYNTAX_ANALYZER) \
-  $(AST_SRCS) \
-  $(COMMON_SRCS)
+  $(CORE_SRCS) \
+  $(MAIN_IR_DRIVER)
+
+# JS Backend (codegen + driver), reaproveitando IR_CORE_SRCS
+JS_SRCS := \
+  $(SRC_DIR)/codegen_js.c \
+  $(MAIN_JS_DRIVER) \
+  $(IR_CORE_SRCS) \
+  $(SEMANTIC_ANALYZER) \
+  $(SYNTAX_ANALYZER) \
+  $(CORE_SRCS)
 
 # =============================
 # Bison/Flex
@@ -57,6 +76,8 @@ FLEX_FILE  := $(SRC_DIR)/scanner.l
 BISON_C := $(SRC_DIR)/parser.tab.c
 BISON_H := $(SRC_DIR)/parser.tab.h
 FLEX_C  := $(SRC_DIR)/lex.yy.c
+
+FRONTEND_SRCS := $(BISON_C) $(FLEX_C)
 
 # =============================
 # Ferramentas e Flags
@@ -75,38 +96,49 @@ endif
 # =============================
 # Alvos principais
 # =============================
-.PHONY: all build ir run run-ir test test-lexer test-syntax test-semantic test-ir clean
+.PHONY: all build ir js run run-ir test test-lexer test-syntax test-semantic test-ir clean
 
-# compila tudo: scanner + parser + analyzer + ir
-all: $(EXEC_LEXER) $(EXEC_SYNTAX) $(EXEC_SEMANTIC) $(EXEC_IR)
+# =============================
+# Build completo
+# =============================
+all: $(EXEC_LEXER) $(EXEC_SYNTAX) $(EXEC_SEMANTIC) $(EXEC_IR) $(JS_BIN)
 build: all
 
 # =============================
-# Regras de compilação
+# Regras de geração Bison/Flex
 # =============================
-
-# --- GERAR Bison/Flex ---
 $(BISON_C) $(BISON_H): $(BISON_FILE)
 	bison $(BISON_FLAGS) -o $(BISON_C) $(BISON_FILE)
 
 $(FLEX_C): $(FLEX_FILE)
 	flex $(FLEX_FLAGS) -o $(FLEX_C) $(FLEX_FILE)
 
+
+# =============================
+# Regras de compilação
+# =============================
+
 # --- LÉXICO (scanner) ---
-$(EXEC_LEXER): $(BISON_C) $(FLEX_C) $(MAIN_LEXER) $(AST_SRCS) $(COMMON_SRCS)
-	$(CC) $(CFLAGS) -o $@ $(BISON_C) $(FLEX_C) $(AST_SRCS) $(COMMON_SRCS) $(MAIN_LEXER) $(LDFLAGS)
+$(EXEC_LEXER): $(FRONTEND_SRCS) $(CORE_SRCS) $(MAIN_LEXER)
+	$(CC) $(CFLAGS) -o $@ $(FRONTEND_SRCS) $(CORE_SRCS) $(MAIN_LEXER) $(LDFLAGS)
 
 # --- SINTÁTICO (parser) ---
-$(EXEC_SYNTAX): $(BISON_C) $(FLEX_C) $(AST_SRCS) $(COMMON_SRCS) $(SYNTAX_ANALYZER) $(MAIN_SYNTAX)
-	$(CC) $(CFLAGS) -o $@ $(BISON_C) $(FLEX_C) $(AST_SRCS) $(COMMON_SRCS) $(SYNTAX_ANALYZER) $(MAIN_SYNTAX) $(LDFLAGS)
+$(EXEC_SYNTAX): $(FRONTEND_SRCS) $(CORE_SRCS) $(SYNTAX_ANALYZER) $(MAIN_SYNTAX)
+	$(CC) $(CFLAGS) -o $@ $(FRONTEND_SRCS) $(CORE_SRCS) $(SYNTAX_ANALYZER) $(MAIN_SYNTAX) $(LDFLAGS)
 
 # --- SEMÂNTICO (analyzer) ---
-$(EXEC_SEMANTIC): $(BISON_C) $(FLEX_C) $(AST_SRCS) $(COMMON_SRCS) $(SEMANTIC_ANALYZER) $(MAIN_SEMANTIC)
-	$(CC) $(CFLAGS) -o $@ $(BISON_C) $(FLEX_C) $(AST_SRCS) $(COMMON_SRCS) $(SEMANTIC_ANALYZER) $(MAIN_SEMANTIC) $(LDFLAGS)
+$(EXEC_SEMANTIC): $(FRONTEND_SRCS) $(CORE_SRCS) $(SEMANTIC_ANALYZER) $(MAIN_SEMANTIC)
+	$(CC) $(CFLAGS) -o $@ $(FRONTEND_SRCS) $(CORE_SRCS) $(SEMANTIC_ANALYZER) $(MAIN_SEMANTIC) $(LDFLAGS)
 
 # --- IR (intermediate representation generator) ---
-$(EXEC_IR): $(BISON_C) $(FLEX_C) $(IR_SRCS)
-	$(CC) $(CFLAGS) -o $@ $(BISON_C) $(FLEX_C) $(IR_SRCS) $(LDFLAGS)
+$(EXEC_IR): $(FRONTEND_SRCS) $(IR_SRCS)
+	$(CC) $(CFLAGS) -o $@ $(FRONTEND_SRCS) $(IR_SRCS) $(LDFLAGS)
+
+# --- JS Backend (jsgen) ---
+js: $(JS_BIN)
+
+$(JS_BIN): $(FRONTEND_SRCS) $(JS_SRCS)
+	$(CC) $(CFLAGS) -o $@ $(FRONTEND_SRCS) $(JS_SRCS) $(LDFLAGS)
 
 ir: $(EXEC_IR)
 
@@ -138,7 +170,6 @@ run-ir: $(EXEC_IR)
 # Testes
 # =============================
 
-# test -> deixa o run.sh decidir as suítes existentes
 test: build
 	@bash $(TEST_DIR)/run.sh
 
@@ -159,4 +190,10 @@ test-ir: $(EXEC_IR)
 # =============================
 clean:
 	@echo "Limpando artefatos…"
-	@rm -f $(EXEC_LEXER) $(EXEC_SYNTAX) $(EXEC_SEMANTIC) $(EXEC_IR) $(BISON_C) $(BISON_H) $(FLEX_C)
+	@rm -f \
+	  $(EXEC_LEXER) \
+	  $(EXEC_SYNTAX) \
+	  $(EXEC_SEMANTIC) \
+	  $(EXEC_IR) \
+	  $(JS_BIN) \
+	  $(BISON_C) $(BISON_H) $(FLEX_C)

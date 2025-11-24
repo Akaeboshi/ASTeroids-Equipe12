@@ -15,6 +15,7 @@ src/scanner
 src/intermediate
 src/generate
 src/irgen
+src/jsgen
 
 # Flex/Bison intermediários
 *.tab.c
