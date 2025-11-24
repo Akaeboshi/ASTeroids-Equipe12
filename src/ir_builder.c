@@ -128,9 +128,13 @@ int irb_emit_expr(IrFunc *f, Node *e) {
             (void)vt_get(f, e->u.as_assign.name, true, TY_INT, NULL);
             (void)ir_emit_mov(f, ir_temp(rv));
             int last = f->temp_count - 1;
+
             for (VarTemp *v = g_vars; v; v = v->next) {
                 if (strcmp(v->name, e->u.as_assign.name) == 0) { v->temp = last; break; }
             }
+
+            ir_register_local(f, e->u.as_assign.name, last);
+
             return last;
         }
 
@@ -289,14 +293,20 @@ void irb_emit_stmt(IrFunc *f, Node *s) {
 
         case ND_DECL: {
             bool created = false;
-            (void)vt_get(f, s->u.as_decl.name, true, s->u.as_decl.type, &created);
+            int t = vt_get(f, s->u.as_decl.name, true, s->u.as_decl.type, &created);
+
+            ir_register_local(f, s->u.as_decl.name, t);
+
             if (s->u.as_decl.init) {
                 int rv = irb_emit_expr(f, s->u.as_decl.init);
                 (void)ir_emit_mov(f, ir_temp(rv));
                 int last = f->temp_count - 1;
+
                 for (VarTemp *v = g_vars; v; v = v->next) {
                     if (strcmp(v->name, s->u.as_decl.name) == 0) { v->temp = last; break; }
                 }
+
+                ir_register_local(f, s->u.as_decl.name, last);
             }
             break;
         }

@@ -4,45 +4,72 @@
 
 #include "ir.h"
 #include "codegen_js.h"
+
 /* -------------------------------------------------------
- *  Mapa simples de temporários JS
+ *  Helpers e Mapa de Variáveis
+ * ------------------------------------------------------- */
+
+/* Busca nome de variável associado a um temp; se não houver, retorna NULL */
+static const char *js_name_for_temp(const IrFunc *f, int temp_id) {
+    if (!f) return NULL;
+    for (size_t i = 0; i < f->local_count; ++i) {
+        if (f->locals[i].temp == temp_id) {
+            return f->locals[i].name;
+        }
+    }
+    return NULL;
+}
+
+/* Imprime um temporário JS (nome da variável se existir) */
+static void js_print_temp(const IrFunc *f, int temp_id, FILE *out) {
+    const char *vname = js_name_for_temp(f, temp_id);
+    if (vname) fprintf(out, "%s", vname);
+    else       fprintf(out, "t%d", temp_id);
+}
+
+/* -------------------------------------------------------
+ *  Mapa simples de variáveis declaradas em JS
+ *    (pra não dar "let x" duas vezes)
  * ------------------------------------------------------- */
 typedef struct JsTemp {
-    int temp_id;
-    int declared;          /* 0 = ainda não usei let, 1 = já declarei */
+    const char    *name;
     struct JsTemp *next;
 } JsTemp;
 
 static JsTemp *g_temps = NULL;
 
-static void js_reset_temps(void) {
-    JsTemp *t = g_temps;
-    while (t) {
-        JsTemp *n = t->next;
-        free(t);
-        t = n;
+static int js_declared(const char *name) {
+    for (JsTemp *t = g_temps; t; t = t->next) {
+        if (strcmp(t->name, name) == 0) return 1;
     }
-    g_temps = NULL;
+    return 0;
 }
 
-static JsTemp *js_get_temp(int id) {
-    for (JsTemp *t = g_temps; t; t = t->next) {
-        if (t->temp_id == id) return t;
-    }
+static void js_mark_declared(const char *name) {
+    if (js_declared(name)) return;
     JsTemp *nt = (JsTemp*)malloc(sizeof(JsTemp));
     if (!nt) {
         fprintf(stderr, "jsgen: out of memory\n");
         exit(1);
     }
-    nt->temp_id = id;
-    nt->declared = 0;
+    nt->name = name;
     nt->next = g_temps;
-    g_temps = nt;
-    return nt;
+    g_temps  = nt;
+}
+
+/* limpa toda a lista de variáveis declaradas */
+static void js_reset_temps(void) {
+    JsTemp *t = g_temps;
+    while (t) {
+        JsTemp *next = t->next;
+        free(t);
+        t = next;
+    }
+    g_temps = NULL;
 }
 
 /* -------------------------------------------------------
- *  Impressão de operandos JS
+ *  Impressão de operandos JS (ainda pouco usada)
  * ------------------------------------------------------- */
 static void print_operand_js(IrOperand op, FILE *out) {
     switch (op.kind) {
@@ -64,46 +91,59 @@ static void print_operand_js(IrOperand op, FILE *out) {
     }
 }
 
-
 /* -------------------------------------------------------
  *  Geração de uma instrução JS
+ *    (por enquanto só IR_MOV + literais/temps)
  * ------------------------------------------------------- */
-static void codegen_js_instr(const IrInstr *ins, FILE *out) {
+static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out) {
     switch (ins->op) {
-        case IR_MOV: {
-            if (ins->dst < 0) {
-                /* Destino inválido */
-                break;
-            }
+      case IR_MOV: {
+          const char *vname = js_name_for_temp(f, ins->dst);
+          char buf[32];
 
-            JsTemp *info = js_get_temp(ins->dst);
+          if (!vname) {
+              /* fallback: usar tN mesmo */
+              snprintf(buf, sizeof(buf), "t%d", ins->dst);
+              vname = buf;
+          }
 
-            if (!info->declared) {
-                /* Primeira vez que esse temporário aparece -> declaramos com let */
-                fprintf(out, "  let t%d = ", ins->dst);
-                info->declared = 1;
-            } else {
-                /* Já declarado antes -> apenas atribuição */
-                fprintf(out, "  t%d = ", ins->dst);
-            }
+          int already = js_declared(vname);
 
-            print_operand_js(ins->a, out);
-            fprintf(out, ";\n");
-            break;
-        }
+          if (!already) {
+              fprintf(out, "  let %s = ", vname);
+              js_mark_declared(vname);
+          } else {
+              fprintf(out, "  %s = ", vname);
+          }
 
-        /* ============================
-         * Os outros ainda serão feitos
-         * ============================ */
-        default:
-            /* Outras instruções ainda não estão implementadas */
-            /* Só comentar para lembrar que falta: */
-            /* fprintf(out, "  // TODO: opcode %d ainda não suportado\n", ins->op); */
-            break;
+          /* imprimir o operando (se for temp, também tentar usar nome) */
+          if (ins->a.kind == IR_OPER_TEMP) {
+              js_print_temp(f, ins->a.v.temp, out);
+          } else if (ins->a.kind == IR_OPER_INT) {
+              fprintf(out, "%lld", ins->a.v.i);
+          } else if (ins->a.kind == IR_OPER_FLOAT) {
+              fprintf(out, "%g", ins->a.v.f);
+          } else if (ins->a.kind == IR_OPER_BOOL) {
+              fprintf(out, "%s", ins->a.v.b ? "true" : "false");
+          } else {
+              fprintf(out, "0"); /* fallback besta pra casos não tratados ainda */
+          }
+
+          fprintf(out, ";\n");
+          break;
+      }
+
+      /* ============================
+       * Os outros ainda serão feitos
+       * ============================ */
+      default:
+          /* Ainda não suportado — vamos ignorar silenciosamente por enquanto
+             ou você pode descomentar para debugar:
+             fprintf(out, "  // TODO: opcode %d ainda não suportado\n", ins->op);
+          */
+          break;
     }
 }
-
-
 
 /* -------------------------------------------------------
  *  Função JS individual
@@ -111,7 +151,7 @@ static void codegen_js_instr(const IrInstr *ins, FILE *out) {
 static void codegen_js_func(const IrFunc *f, FILE *out) {
     if (!f) return;
 
-    /* Reseta o mapa de temporários por função */
+    /* Reseta o mapa de variáveis declaradas por função */
     js_reset_temps();
 
     /* Função principal (_entry) */
@@ -119,13 +159,14 @@ static void codegen_js_func(const IrFunc *f, FILE *out) {
         fprintf(out, "function _entry() {\n");
 
         for (size_t i = 0; i < f->code_len; ++i) {
-            codegen_js_instr(&f->code[i], out);
+            codegen_js_instr(f, &f->code[i], out);
         }
 
         fprintf(out, "}\n\n");
         return;
     }
 
+    /* Outras funções (por enquanto só casca, sem corpo real) */
     fprintf(out, "function %s(", f->name ? f->name : "fn");
 
     for (size_t i = 0; i < f->param_count; ++i) {
@@ -170,6 +211,6 @@ void codegen_js_program(const IrProgram *prog, FILE *out) {
         fprintf(out, "// TODO: não foi encontrada função _entry()\n");
     }
 
-    /* limpa tabela global de temporários */
+    /* limpa tabela global de variáveis declaradas (por segurança) */
     js_reset_temps();
 }

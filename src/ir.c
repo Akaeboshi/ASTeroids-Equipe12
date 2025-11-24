@@ -242,3 +242,30 @@ void ir_emit_ret(IrFunc *f, bool has_value, IrOperand val) {
     ins.b.kind = IR_OPER_NONE;
     ir_push(f, &ins);
 }
+
+/* Aumenta vetor de variáveis locais */
+static void ir_func_grow_locals(IrFunc *f) {
+    if (f->local_count + 1 > f->local_cap) {
+        f->local_cap = f->local_cap ? f->local_cap * 2 : 8;
+        f->locals = (IrLocalVar*)ir_xrealloc(f->locals, sizeof(IrLocalVar) * f->local_cap);
+    }
+}
+
+/* Registra uma variável local */
+void ir_register_local(IrFunc *f, const char *name, int temp) {
+    if (!f || !name) return;
+
+    /* se já existe essa variável, só atualiza o temp atual */
+    for (size_t i = 0; i < f->local_count; ++i) {
+        if (strcmp(f->locals[i].name, name) == 0) {
+            f->locals[i].temp = temp;
+            return;
+        }
+    }
+
+    /* senão, insere uma nova variável local */
+    ir_func_grow_locals(f);
+    f->locals[f->local_count].name = name;  /* nome vem da AST */
+    f->locals[f->local_count].temp = temp;
+    f->local_count++;
+}
