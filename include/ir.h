@@ -6,6 +6,14 @@
 #include "ast_base.h" /* para TypeTag e xmalloc/xstrdup */
 
 /* ================================
+ *  Variáveis locais
+ * ================================ */
+typedef struct {
+    const char *name;   /* nome da variável no código-fonte */
+    int         temp;   /* id do temporário que representa o valor atual da variável */
+} IrLocalVar;
+
+/* ================================
  *  Operações do IR
  * ================================ */
 typedef enum {
@@ -94,6 +102,11 @@ typedef struct {
 
     int temp_count;   /* próximo id de temporário a alocar */
     int label_count;  /* próximo id de label a criar */
+
+    /* Variáveis locais vistas pelo backend */
+    IrLocalVar *locals;
+    size_t      local_count;
+    size_t      local_cap;
 } IrFunc;
 
 typedef struct {
@@ -172,5 +185,7 @@ int  ir_emit_call(IrFunc *f, const char *name,
                   TypeTag ret_type); /* retorna dst tN (ou -1 se void) */
 
 void ir_emit_ret (IrFunc *f, bool has_value, IrOperand val);
+
+void ir_register_local(IrFunc *f, const char *name, int temp);
 
 #endif /* IR_H */
