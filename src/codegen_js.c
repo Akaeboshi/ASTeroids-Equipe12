@@ -47,21 +47,30 @@ static int js_declared(const char *name) {
 
 static void js_mark_declared(const char *name) {
     if (js_declared(name)) return;
+
     JsTemp *nt = (JsTemp*)malloc(sizeof(JsTemp));
     if (!nt) {
         fprintf(stderr, "jsgen: out of memory\n");
         exit(1);
     }
-    nt->name = name;
+
+    nt->name = strdup(name);
+    if (!nt->name) {
+        fprintf(stderr, "jsgen: out of memory (strdup)\n");
+        exit(1);
+    }
+
     nt->next = g_temps;
     g_temps  = nt;
 }
+
 
 /* limpa toda a lista de variáveis declaradas */
 static void js_reset_temps(void) {
     JsTemp *t = g_temps;
     while (t) {
         JsTemp *next = t->next;
+        free((char*)t->name);
         free(t);
         t = next;
     }
