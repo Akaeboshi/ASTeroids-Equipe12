@@ -1,0 +1,9 @@
+// Código gerado automaticamente a partir do IR
+
+function _entry() {
+  let t0 = 3;
+  let t1 = 4;
+  let t2 = t0 + t1;
+}
+
+_entry();

@@ -1,0 +1,12 @@
+// Código gerado automaticamente a partir do IR
+
+function _entry() {
+  let t1 = 10;
+  let t2 = 3;
+  let t3 = 2;
+  let t4 = t2 * t3;
+  let t5 = t1 - t4;
+  let x = t5;
+}
+
+_entry();
