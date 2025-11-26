@@ -189,6 +189,26 @@ test-codegen: $(JS_BIN)
 	@bash $(TEST_DIR)/run.sh generation
 
 # =============================
+# Geração direta de arquivo JS a partir de .cpp
+# Uso: make jsfile FILE=programa.cpp
+# Resultado: build/js/programa.js
+# =============================
+
+jsfile: $(JS_BIN)
+	@if [ -z "$(FILE)" ]; then \
+	  echo "Erro: use make jsfile FILE=arquivo.cpp"; exit 1; \
+	fi
+
+	@mkdir -p build/js
+
+	@name=$$(basename "$(FILE)" .cpp); \
+	jsout="build/js/$$name.js"; \
+	echo ">> Gerando $$jsout"; \
+	$(JS_BIN) "$(FILE)" > "$$jsout"; \
+	echo ">> Conteúdo gerado:"; \
+	cat "$$jsout"
+
+# =============================
 # Limpeza
 # =============================
 clean:
