@@ -226,3 +226,43 @@ function ChecaIntervalo(p0, p1) {
 }
 ```
 
+### Exemplo 5.5: Movimentação (Cópia Direta)
+
+**Código IR:**
+
+```ir
+func@MoveValue(p0) {
+    // t0 = p0 (Copia o valor)
+    t0 = move p0
+    
+    // t1 = 5 (Carrega uma constante)
+    t1 = load_const 5 
+    
+    // t2 = t0 + t1
+    t2 = add t0, t1
+    
+    ret t2
+}
+```
+
+**Código JavaScript Traduzido:**
+
+```
+function MoveValue(p0) {
+    // Declaração de temporários
+    let t0;
+    let t1;
+    let t2;
+    
+    // t0 = move p0
+    t0 = p0; 
+    
+    // t1 = 5
+    t1 = 5; 
+    
+    // t2 = t0 + t1
+    t2 = t0 + t1;
+    
+    return t2;
+}
+```
