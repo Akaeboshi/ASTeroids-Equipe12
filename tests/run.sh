@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runner de testes — varre tests/*/{ok,err} e roda tudo em ordem fixa.
-# Suítes suportadas: lexer → syntax → semantic → intermediate → generate
+# Suítes suportadas: lexer → syntax → semantic → intermediate → generation
 # Regras:
 #  - lexer: normaliza a saída do driver e compara tokens/mensagens com expected/
 #  - syntax: extrai "AST (Formatada)" e compara com .golden (se existir)
@@ -42,11 +42,11 @@ ERR_EMOJI="🔴"
 # ------------------------------------------------------------------------------
 bin_for_suite() {
   case "$1" in
-    lex|lexer)          echo "${ROOT_DIR}/src/scanner" ;;
+    lexer)          echo "${ROOT_DIR}/src/scanner" ;;
     syntax)             echo "${ROOT_DIR}/src/parser" ;;
     semantic)           echo "${ROOT_DIR}/src/analyzer" ;;
-    intermediate)       echo "${ROOT_DIR}/src/intermediate" ;;
-    generate|generation) echo "${ROOT_DIR}/src/generate" ;;
+    intermediate)       echo "${ROOT_DIR}/src/irgen" ;;
+    generation) echo "${ROOT_DIR}/src/jsgen" ;;
     *)                  echo "${ROOT_DIR}/src/parser" ;;
   esac
 }
@@ -63,11 +63,11 @@ line() { printf "%s\n" "──────────────────�
 suite_title() {
   local raw="$1"
   case "$raw" in
-    lex|lexer)          echo "${EMOJI_LEXER}  ${BOLD}Lexical Analysis${RESET}" ;;
+    lexer)          echo "${EMOJI_LEXER}  ${BOLD}Lexical Analysis${RESET}" ;;
     syntax)             echo "${EMOJI_SYNTAX}  ${BOLD}Syntax Analysis${RESET}" ;;
     semantic)           echo "${EMOJI_SEMANTIC}  ${BOLD}Semantic Analysis${RESET}" ;;
     intermediate)       echo "${EMOJI_INTERMEDIATE}  ${BOLD}Intermediate Representation${RESET}" ;;
-    generate|generation) echo "${EMOJI_GENERATION}  ${BOLD}Code Generation${RESET}" ;;
+    generation) echo "${EMOJI_GENERATION}  ${BOLD}Code Generation${RESET}" ;;
     *)                  echo "${EMOJI_DEFAULT}  ${BOLD}${raw^}${RESET}" ;;
   esac
 }
@@ -232,6 +232,57 @@ run_err_case_lex() {
 }
 
 # ------------------------------------------------------------------------------
+# Casos específicos de GERAÇÃO (JS) — usa .golden
+# ------------------------------------------------------------------------------
+run_ok_case_generation() {
+  local file="$1"                        # tests/generation/ok/ok_*.in
+  local base; base="$(basename "$file")" # ok_*.in
+  local name="${base%.in}"               # ok_*
+  local golden="${ok_dir}/${name}.golden"
+
+  local out; out="$("$BIN" "$file" 2>&1)"
+  local status=$?
+
+  if [[ $status -ne 0 ]]; then
+    printf "%b %s%s%s (esperado sucesso) → retorno %d\n" "$ERR_EMOJI" "$RED" "$base" "$RESET" "$status"
+    echo "$out"
+    ((fail++)); return
+  fi
+
+  if [[ -f "$golden" ]]; then
+    if diff -u --strip-trailing-cr <(sed -e '$a\' "$golden") <(printf "%s\n" "$out") > /tmp/diff.$$ 2>&1; then
+      printf "%b %s%s%s (JS bateu com .golden)\n" "$OK_EMOJI" "$GREEN" "$base" "$RESET"
+      ((pass++))
+    else
+      printf "%b %s%s%s (JS divergente do .golden)\n" "$ERR_EMOJI" "$RED" "$base" "$RESET"
+      cat /tmp/diff.$$
+      ((fail++))
+    fi
+    rm -f /tmp/diff.$$ || true
+  else
+    printf "%b %s%s%s (Passou, mas .golden não existe)\n" "$YELLOW" "$base" "$RESET" ""
+    ((pass++))
+  fi
+}
+
+run_err_case_generation() {
+  local file="$1"                        # tests/generation/err/err_*.in
+  local base; base="$(basename "$file")" # err_*.in
+
+  local out; out="$("$BIN" "$file" 2>&1)"
+  local status=$?
+
+  if [[ $status -ne 0 ]]; then
+    printf "%b %s%s%s (Falhou como esperado)\n" "$OK_EMOJI" "$GREEN" "$base" "$RESET"
+    ((pass++))
+  else
+    printf "%b %s%s%s (Deveria falhar, mas passou)\n" "$ERR_EMOJI" "$RED" "$base" "$RESET"
+    echo "$out"
+    ((fail++))
+  fi
+}
+
+# ------------------------------------------------------------------------------
 # Execução de uma suíte
 # ------------------------------------------------------------------------------
 run_suite() {
@@ -260,7 +311,7 @@ run_suite() {
   local f
 
   # Léxico: tratamento próprio
-  if [[ "$CURRENT_SUITE" == "lex" || "$CURRENT_SUITE" == "lexer" ]]; then
+  if [[ "$CURRENT_SUITE" == "lexer" ]]; then
     for f in "$ok_dir"/ok_*.in; do
       [[ -e "$f" ]] || break
       run_ok_case_lex "$f"
@@ -271,6 +322,22 @@ run_suite() {
     for f in "$err_dir"/err_*.in; do
       [[ -e "$f" ]] || break
       run_err_case_lex "$f"
+    done
+    return
+  fi
+
+  # Geração (JS): usa .golden
+  if [[ "$CURRENT_SUITE" == "generation" ]]; then
+    for f in "$ok_dir"/ok_*.in; do
+      [[ -e "$f" ]] || break
+      run_ok_case_generation "$f"
+    done
+
+    echo
+    printf "%sERR (devem falhar)%s\n" "$YELLOW" "$RESET"
+    for f in "$err_dir"/err_*.in; do
+      [[ -e "$f" ]] || break
+      run_err_case_generation "$f"
     done
     return
   fi
@@ -297,7 +364,7 @@ echo "${BOLD}Executando testes…${RESET}"
 if [[ $# -gt 0 ]]; then
   ordered_suites=("$@")
 else
-  ordered_suites=(lexer syntax semantic intermediate generate)
+  ordered_suites=(lexer syntax semantic intermediate generation)
 fi
 
 for suite_name in "${ordered_suites[@]}"; do

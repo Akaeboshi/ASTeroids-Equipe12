@@ -185,6 +185,9 @@ test-semantic: $(EXEC_SEMANTIC)
 test-ir: $(EXEC_IR)
 	@bash $(TEST_DIR)/run.sh intermediate
 
+test-codegen: $(JS_BIN)
+	@bash $(TEST_DIR)/run.sh generation
+
 # =============================
 # Limpeza
 # =============================
