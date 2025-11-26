@@ -97,17 +97,79 @@ static void print_operand_js(IrOperand op, FILE *out) {
  * ------------------------------------------------------- */
 static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out) {
     switch (ins->op) {
+      /* ============================
+       * MOV: tN = mov ...
+       * ============================ */
       case IR_MOV: {
+        const char *var_name = js_name_for_temp(f, ins->dst);
+        char buf[32];
+        const char *vname = NULL;
+        int need_decl_check = 0;
+
+        if (var_name) {
+          vname = var_name;
+          need_decl_check = 1;
+        } else {
+            // Temporário tN: sempre podemos declarar com let
+            snprintf(buf, sizeof(buf), "t%d", ins->dst);
+            vname = buf;
+            need_decl_check = 0;
+        }
+
+        // --- escolher se vai "let x =" ou só "x =" ---
+        if (need_decl_check) {
+          if (!js_declared(vname)) {
+            fprintf(out, "  let %s = ", vname);
+            js_mark_declared(vname);
+          } else {
+            fprintf(out, "  %s = ", vname);
+          }
+        } else {
+          fprintf(out, "  let %s = ", vname);
+        }
+
+        /* imprimir o operando (se for temp, também tentar usar nome) */
+        if (ins->a.kind == IR_OPER_TEMP) {
+          js_print_temp(f, ins->a.v.temp, out);
+        } else if (ins->a.kind == IR_OPER_INT) {
+          fprintf(out, "%lld", ins->a.v.i);
+        } else if (ins->a.kind == IR_OPER_FLOAT) {
+          fprintf(out, "%g", ins->a.v.f);
+        } else if (ins->a.kind == IR_OPER_BOOL) {
+          fprintf(out, "%s", ins->a.v.b ? "true" : "false");
+        } else {
+          fprintf(out, "0"); /* fallback pra casos não tratados ainda */
+        }
+
+        fprintf(out, ";\n");
+        break;
+      }
+
+      /* ============================
+       * Aritméticos: ADD, SUB, MUL, DIV
+       * ============================ */
+      case IR_ADD:
+      case IR_SUB:
+      case IR_MUL:
+      case IR_DIV: {
           const char *vname = js_name_for_temp(f, ins->dst);
           char buf[32];
 
           if (!vname) {
-              /* fallback: usar tN mesmo */
               snprintf(buf, sizeof(buf), "t%d", ins->dst);
               vname = buf;
           }
 
           int already = js_declared(vname);
+          const char *op_str = NULL;
+
+          switch (ins->op) {
+              case IR_ADD: op_str = "+"; break;
+              case IR_SUB: op_str = "-"; break;
+              case IR_MUL: op_str = "*"; break;
+              case IR_DIV: op_str = "/"; break;
+              default:     op_str = "?"; break;
+          }
 
           if (!already) {
               fprintf(out, "  let %s = ", vname);
@@ -116,7 +178,7 @@ static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out) {
               fprintf(out, "  %s = ", vname);
           }
 
-          /* imprimir o operando (se for temp, também tentar usar nome) */
+          /* lado esquerdo (a) */
           if (ins->a.kind == IR_OPER_TEMP) {
               js_print_temp(f, ins->a.v.temp, out);
           } else if (ins->a.kind == IR_OPER_INT) {
@@ -126,7 +188,22 @@ static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out) {
           } else if (ins->a.kind == IR_OPER_BOOL) {
               fprintf(out, "%s", ins->a.v.b ? "true" : "false");
           } else {
-              fprintf(out, "0"); /* fallback besta pra casos não tratados ainda */
+              fprintf(out, "0");
+          }
+
+          fprintf(out, " %s ", op_str);
+
+          /* lado direito (b) */
+          if (ins->b.kind == IR_OPER_TEMP) {
+              js_print_temp(f, ins->b.v.temp, out);
+          } else if (ins->b.kind == IR_OPER_INT) {
+              fprintf(out, "%lld", ins->b.v.i);
+          } else if (ins->b.kind == IR_OPER_FLOAT) {
+              fprintf(out, "%g", ins->b.v.f);
+          } else if (ins->b.kind == IR_OPER_BOOL) {
+              fprintf(out, "%s", ins->b.v.b ? "true" : "false");
+          } else {
+              fprintf(out, "0");
           }
 
           fprintf(out, ";\n");
