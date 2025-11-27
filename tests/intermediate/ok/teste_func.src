@@ -1,0 +1,8 @@
+func soma(int a, float b) -> int {
+    int c = 10;
+    return a;
+}
+
+func main() -> void {
+    soma(5, 3.14);
+}

@@ -386,20 +386,12 @@ void irb_emit_func(IrProgram *p, Node *func_node) {
     Node *f_node = func_node;
     
     // Armazena o nome e tipos do retorno/parâmetros.
-    const char *name = f_node->u.as_func.name;
-    TypeTag ret_type = f_node->u.as_func.ret_type;
+    const char *name = f_node->u.as_function.name;
+    TypeTag ret_type = f_node->u.as_function.ret_type;
     
-    size_t param_count = f_node->u.as_func.param_count;
+    size_t param_count = f_node->u.as_function.param_count;
     TypeTag *param_types = (TypeTag*)xmalloc(sizeof(TypeTag) * param_count);
-    // Node **param_names = ... (Você precisaria dos nomes para o escopo)
     
-    // **NOTA:** Como não temos a definição do struct ND_FUNCTION na AST, 
-    // assumirei que a função `ir_func_begin` aceita a lista de tipos. 
-    // Faremos o mapeamento dos nomes de parâmetros (se disponíveis) para temporários logo abaixo.
-    
-    // 1. & 3. Criar IrFunc e Resetar Estado (feita por ir_func_begin e irb_reset_state)
-    
-    // Salva o escopo global (útil se o builder for usado para outras coisas)
     VarTemp *global_snapshot = vt_clone_list(g_vars); 
     irb_reset_state(); // Reseta g_vars (escopo local) e o estado do builder (implicitamente feito pelo driver)
 
@@ -414,20 +406,21 @@ void irb_emit_func(IrProgram *p, Node *func_node) {
     // Os parâmetros da função são t0, t1, t2, ...
     for (size_t i = 0; i < param_count; i++) {
     
-       const char *param_name = f_node ->u.as_func.param_name[i];
+       Node *param_node = f_node->u.as_function.params[i];
+
+       const char *param_name = param_node->u.as_decl.name;
 
         // O temporário para o i-ésimo parâmetro é t_i.
-        vt_insert_manual(xstrdup(temp_name), (int)i); // xstrdup para manter o nome na lista g_vars
+        vt_insert_manual(xstrdup(param_name), (int)i); // xstrdup para manter o nome na lista g_vars
         
+        f->temp_count++;
 
         vt_insert_manual(xstrdup(param_name), (int)i);
-        // Para cada parâmetro, reservamos o temporário t_i. 
-        // Depois disso, incrementamos temp_count para que a primeira var local seja t_param_count
-        f->temp_count++; // Incrementa para refletir que t0, t1, ... t(n-1) foram usados pelos parâmetros.
+      
     }
     
     // 4. Emitir IR do corpo da função
-    irb_emit_stmt(f, f_node->u.as_func.body);
+    irb_emit_stmt(f, f_node->u.as_function.body);
 
     // 5. Gerar ret implícito para funções void
     // Verifica se a última instrução é um RET.
@@ -451,14 +444,14 @@ void irb_emit_func(IrProgram *p, Node *func_node) {
 }
 
 IrProgram *irb_build_program(Node *program_node) {
-    if (!program_node || program_node->kind != ND_PROGRAM) return NULL;
+    if (!program_node || program_node->kind != ND_BLOCK) return NULL;
     
     IrProgram *p = ir_program_new(); 
     if (!p) return NULL;
 
     // Itera sobre todas as declarações de nível superior (que devem ser ND_FUNCTION)
-    for (size_t i = 0; i < program_node->u.as_program.count; i++) {
-        Node *n = program_node->u.as_program.nodes[i];
+    for (size_t i = 0; i < program_node->u.as_block.count; i++) {
+        Node *n = program_node->u.as_block.stmts[i];
         if (n->kind == ND_FUNCTION) {
             irb_emit_func(p, n);
         } else {
