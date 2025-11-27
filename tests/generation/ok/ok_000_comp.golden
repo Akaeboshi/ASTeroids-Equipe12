@@ -1,0 +1,10 @@
+func main() -> void {
+    int a = 10;
+    int b = 20;
+    bool result1 = (a < b);  // Gera IR_LT
+    bool result2 = (a >= b); // Gera IR_GE
+    bool result3 = (a == 10); // Gera IR_EQ
+    
+    // Adicione chamadas a alguma função externa para imprimir
+    // Ex: print_bool(result1);
+}

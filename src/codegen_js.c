@@ -161,7 +161,13 @@ static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out) {
       case IR_ADD:
       case IR_SUB:
       case IR_MUL:
-      case IR_DIV: {
+      case IR_DIV:
+      case IR_LT:
+      case IR_LE:
+      case IR_GT:
+      case IR_GE:
+      case IR_EQ:
+      case IR_NE: {
           const char *vname = js_name_for_temp(f, ins->dst);
           char buf[32];
 
@@ -178,6 +184,12 @@ static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out) {
               case IR_SUB: op_str = "-"; break;
               case IR_MUL: op_str = "*"; break;
               case IR_DIV: op_str = "/"; break;
+              case IR_LT: op_str = "<"; break;
+              case IR_LE: op_str = "<="; break;
+              case IR_GT: op_str = ">"; break;
+              case IR_GE: op_str = ">="; break;
+              case IR_EQ: op_str = "==="; break; 
+              case IR_NE: op_str = "!=="; break;
               default:     op_str = "?"; break;
           }
 
@@ -219,7 +231,7 @@ static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out) {
           fprintf(out, ";\n");
           break;
       }
-
+      
       /* ============================
        * Os outros ainda serão feitos
        * ============================ */
