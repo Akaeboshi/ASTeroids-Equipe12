@@ -1,0 +1,9 @@
+void main() {
+    int x;
+    x = 5;
+    int y;
+    y = 10;
+    
+    // Testando a comparação (x < 10) e armazenando o resultado
+    bool result = (x < 10); 
+}

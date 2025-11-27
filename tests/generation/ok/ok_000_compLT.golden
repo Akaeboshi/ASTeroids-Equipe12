@@ -1,0 +1,12 @@
+function _entry() {
+    let _x; // int x;
+    _x = 5; // x = 5;
+    let _y; // int y;
+    _y = 10; // y = 10;
+    
+    let _result; // bool result;
+
+    // Tradução da comparação e atribuição
+    let t0 = (_x < 10); // t0 é o resultado booleano de x < 10
+    _result = t0; 
+}
