@@ -1,0 +1,14 @@
+func _entry() -> void {
+  .local x -> t0
+  t1 = mov 10
+  .local x -> t1
+  t2 = call inc(t1) -> int
+  .local x -> t2
+  ret
+}
+func inc(int) -> int {
+  .local a -> t0
+  t1 = mov 1
+  t2 = add t0, t1
+  ret t2
+}

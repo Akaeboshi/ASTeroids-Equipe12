@@ -1,0 +1,10 @@
+func _entry() -> void {
+  ret
+}
+func soma(int, int) -> int {
+  .local a -> t0
+  .local b -> t1
+  t2 = add t0, t1
+  ret t2
+}
+
