@@ -42,3 +42,5 @@ nav:
   - Escopo da Linguagem: escopo.md
   - Gramática Formal (CGF): gramatica.md
   - Documento de Referência: referencia.md
+  - Referência de tradução: ir_to_js.md
+

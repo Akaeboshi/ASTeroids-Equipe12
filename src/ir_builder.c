@@ -101,6 +101,7 @@ static int vt_get(IrFunc *f, const char *name, bool create_if_missing, TypeTag d
 /* ---------------------------------------------------------
  *  Helpers de emissão
  * --------------------------------------------------------- */
+__attribute__((unused))
 static inline int is_num(TypeTag t){ return t==TY_INT || t==TY_FLOAT; }
 
 static int emit_bin(IrFunc *f, IrOp op, int lt, int rt) {

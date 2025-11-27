@@ -78,8 +78,9 @@ static void js_reset_temps(void) {
 }
 
 /* -------------------------------------------------------
- *  Impressão de operandos JS (ainda pouco usada)
+ *  Impressão de operandos JS (ainda não usada)
  * ------------------------------------------------------- */
+__attribute__((unused))
 static void print_operand_js(IrOperand op, FILE *out) {
     switch (op.kind) {
         case IR_OPER_INT:
