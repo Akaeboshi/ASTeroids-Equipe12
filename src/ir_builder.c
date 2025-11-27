@@ -53,6 +53,22 @@ static void vt_restore_from(VarTemp *src) {
     g_vars = vt_clone_list(src);
 }
 
+static void vt_insert_manual(const char *name, int temp_id) {
+    // Verifica se já existe 
+    for (VarTemp *v = g_vars; v; v = v->next) {
+        if (strcmp(v->name, name) == 0) {
+            v->temp = temp_id;
+            return;
+        }
+    }
+
+    VarTemp *nv = (VarTemp*)xmalloc(sizeof(VarTemp));
+    nv->name = name; 
+    nv->temp = temp_id;
+    nv->next = g_vars;
+    g_vars   = nv;
+}
+
 void irb_reset_state(void) {
     vt_free_list(g_vars);
     g_vars = NULL;
@@ -360,4 +376,97 @@ void irb_emit_stmt(IrFunc *f, Node *s) {
         default:
             break;
     }
+}
+
+/* Emite o código IR para uma única função. */
+void irb_emit_func(IrProgram *p, Node *func_node) {
+    if (!func_node || func_node->kind != ND_FUNCTION) return;
+    
+    Node *f_node = func_node;
+    
+    // Armazena o nome e tipos do retorno/parâmetros.
+    const char *name = f_node->u.as_func.name;
+    TypeTag ret_type = f_node->u.as_func.ret_type;
+    
+    size_t param_count = f_node->u.as_func.param_count;
+    TypeTag *param_types = (TypeTag*)xmalloc(sizeof(TypeTag) * param_count);
+    // Node **param_names = ... (Você precisaria dos nomes para o escopo)
+    
+    // **NOTA:** Como não temos a definição do struct ND_FUNCTION na AST, 
+    // assumirei que a função `ir_func_begin` aceita a lista de tipos. 
+    // Faremos o mapeamento dos nomes de parâmetros (se disponíveis) para temporários logo abaixo.
+    
+    // 1. & 3. Criar IrFunc e Resetar Estado (feita por ir_func_begin e irb_reset_state)
+    
+    // Salva o escopo global (útil se o builder for usado para outras coisas)
+    VarTemp *global_snapshot = vt_clone_list(g_vars); 
+    irb_reset_state(); // Reseta g_vars (escopo local) e o estado do builder (implicitamente feito pelo driver)
+
+    // O ir_func_begin (em ir.c) já inicializa temp_count=0 e label_count=0.
+    IrFunc *f = ir_func_begin(p, name, ret_type, param_types, param_count);
+    free(param_types);
+    
+    if (!f) return;
+    
+    // 2. Criar escopo interno e mapear Parâmetros
+    
+    // Os parâmetros da função são t0, t1, t2, ...
+    for (size_t i = 0; i < param_count; i++) {
+    
+       const char *param_name = f_node ->u.as_func.param_name[i];
+
+        // O temporário para o i-ésimo parâmetro é t_i.
+        vt_insert_manual(xstrdup(temp_name), (int)i); // xstrdup para manter o nome na lista g_vars
+        
+
+        vt_insert_manual(xstrdup(param_name), (int)i);
+        // Para cada parâmetro, reservamos o temporário t_i. 
+        // Depois disso, incrementamos temp_count para que a primeira var local seja t_param_count
+        f->temp_count++; // Incrementa para refletir que t0, t1, ... t(n-1) foram usados pelos parâmetros.
+    }
+    
+    // 4. Emitir IR do corpo da função
+    irb_emit_stmt(f, f_node->u.as_func.body);
+
+    // 5. Gerar ret implícito para funções void
+    // Verifica se a última instrução é um RET.
+    bool needs_implicit_ret = true;
+    if (f->code_len > 0) {
+        if (f->code[f->code_len - 1].op == IR_RET) {
+            needs_implicit_ret = false;
+        }
+    }
+    
+    if (needs_implicit_ret && ret_type == TY_VOID) {
+        ir_emit_ret(f, false, (IrOperand){ .kind = IR_OPER_NONE });
+    }
+    
+    // 3. Restaurar estado (escopo global)
+    vt_restore_from(global_snapshot);
+    vt_free_list(global_snapshot);
+
+    // Finaliza a função IR
+    ir_func_end(p, f); 
+}
+
+IrProgram *irb_build_program(Node *program_node) {
+    if (!program_node || program_node->kind != ND_PROGRAM) return NULL;
+    
+    IrProgram *p = ir_program_new(); 
+    if (!p) return NULL;
+
+    // Itera sobre todas as declarações de nível superior (que devem ser ND_FUNCTION)
+    for (size_t i = 0; i < program_node->u.as_program.count; i++) {
+        Node *n = program_node->u.as_program.nodes[i];
+        if (n->kind == ND_FUNCTION) {
+            irb_emit_func(p, n);
+        } else {
+            // **NOTA:** Se houver código de nível superior fora de funções, 
+            // você deve criar uma função especial (ex: "_entry") e 
+            // emitir esses comandos lá, chamando irb_emit_stmt. 
+            // Por enquanto, ignoramos comandos de nível superior que não são funções.
+        }
+    }
+
+    return p;
 }
