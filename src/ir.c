@@ -54,6 +54,8 @@ void ir_program_free(IrProgram *p) {
 
         if (f->params) free(f->params);
 
+        if (f->locals) free(f->locals);
+
         free(f);
     }
     free(p->funcs);
