@@ -1,0 +1,8 @@
+int dobrar(int x) {
+    return x * 2;
+}
+
+int main() {
+    int resultado = dobrar(5);
+    return resultado;
+}

@@ -58,13 +58,16 @@ typedef struct JsTemp {
 
 static JsTemp *g_temps = NULL;
 
+/*
 static int js_declared(const char *name) {
     for (JsTemp *t = g_temps; t; t = t->next) {
         if (strcmp(t->name, name) == 0) return 1;
     }
     return 0;
 }
+*/
 
+/* Comente esta função pois não está sendo usada
 static void js_mark_declared(const char *name) {
     if (js_declared(name)) return;
 
@@ -73,6 +76,8 @@ static void js_mark_declared(const char *name) {
     nt->next = g_temps;
     g_temps = nt;
 }
+*/
+
 
 static void js_reset_temps(void) {
     JsTemp *t = g_temps;
@@ -117,6 +122,32 @@ static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out) {
       case IR_LABEL:
             /* Labels são tratados na estrutura de controle */
             break;
+
+      /* ============================
+      * Chamada de Função:d IR_CALL
+      * ============================ */
+      case IR_CALL: {
+            /* Se a função tem retorno não void, gerar "tX = " */
+            if (ins->dst >= 0) {
+                fprintf(out, "  ");
+                js_print_temp(f, ins->dst, out);
+                fprintf(out, " = ");
+            } else {
+                fprintf(out, "  ");
+            }
+
+            /* Nome da função */
+            fprintf(out, "%s(", ins->callee);
+
+            /* Argumentos */
+            for (size_t i = 0; i < ins->argc; i++) {
+                if (i) fprintf(out, ", ");
+                fprintf(out, "t%d", ins->args[i]);
+            }
+
+            fprintf(out, ");\n");
+            break;
+      }
       
       /* ============================
        * MOV: tN = mov ...
@@ -235,7 +266,7 @@ static void codegen_js_func(const IrFunc *f, FILE *out) {
 
     js_reset_temps();
 
-    /* Limpa mapa anterior */
+    /* Limpa mapa anterior de labels */
     LabelMap *current = g_label_map;
     while (current) {
         LabelMap *next = current->next;
@@ -244,19 +275,55 @@ static void codegen_js_func(const IrFunc *f, FILE *out) {
     }
     g_label_map = NULL;
 
-    if (f->name && strcmp(f->name, "_entry") == 0) {
-        fprintf(out, "function _entry() {\n");
-        
-        /* Declara todos os temporários usados */
+    /* PRIMEIRO: Verifica se precisa de controle de fluxo (se há labels) */
+    int has_labels = 0;
+    for (size_t i = 0; i < f->code_len; i++) {
+        if (f->code[i].op == IR_LABEL) {
+            has_labels = 1;
+            break;
+        }
+    }
+
+    /* Gera cabeçalho da função */
+    fprintf(out, "function %s(", f->name ? f->name : "fn");
+    
+    /* Parâmetros da função */
+    for (size_t i = 0; i < f->param_count; ++i) {
+        if (i) fprintf(out, ", ");
+        fprintf(out, "p%zu", i);
+    }
+    fprintf(out, ") {\n");
+
+    /* SEGUNDO: Declara todos os temporários usados - EVITA "let ;" */
+    if (f->temp_count > 0 || has_labels) {
         fprintf(out, "  let ");
         int first_temp = 1;
+        
+        /* Inicializa os primeiros param_count temporários com os parâmetros */
         for (int i = 0; i < f->temp_count; i++) {
             if (!first_temp) fprintf(out, ", ");
-            fprintf(out, "t%d", i);
+            
+            if (i < (int)f->param_count) {
+                /* Parâmetros: inicializa com p0, p1, ... */
+                fprintf(out, "t%d = p%d", i, i);
+            } else {
+                /* Outros temporários: só declara */
+                fprintf(out, "t%d", i);
+            }
             first_temp = 0;
         }
-        fprintf(out, ", pc = 0;\n");
+        
+        /* Adiciona pc se houver labels */
+        if (has_labels) {
+            if (!first_temp) fprintf(out, ", ");
+            fprintf(out, "pc = 0");
+        }
+        fprintf(out, ";\n");
+    }
+    /* Se não há temporários nem labels, não declara nada */
 
+    /* TERCEIRO: Gera estrutura de controle se houver labels */
+    if (has_labels) {
         /* Constrói mapa de labels -> casos */
         int case_count = 0;
         
@@ -308,28 +375,23 @@ static void codegen_js_func(const IrFunc *f, FILE *out) {
         fprintf(out, "    }\n");
         fprintf(out, "    break;\n");
         fprintf(out, "  }\n");
-        fprintf(out, "}\n\n");
-
-        /* Limpa mapa de labels */
-        current = g_label_map;
-        while (current) {
-            LabelMap *next = current->next;
-            free(current);
-            current = next;
+    } else {
+        /* Sem labels - código sequencial */
+        for (size_t i = 0; i < f->code_len; i++) {
+            codegen_js_instr(f, &f->code[i], out);
         }
-        g_label_map = NULL;
-        return;
     }
-
-    /* Outras funções */
-    fprintf(out, "function %s(", f->name ? f->name : "fn");
-    for (size_t i = 0; i < f->param_count; ++i) {
-        if (i) fprintf(out, ", ");
-        fprintf(out, "p%zu", i);
-    }
-    fprintf(out, ") {\n");
-    fprintf(out, "  // TODO: gerar corpo JS desta função a partir do IR\n");
+    
     fprintf(out, "}\n\n");
+
+    /* Limpa mapa de labels */
+    current = g_label_map;
+    while (current) {
+        LabelMap *next = current->next;
+        free(current);
+        current = next;
+    }
+    g_label_map = NULL;
 }
 
 /* -------------------------------------------------------
@@ -344,12 +406,18 @@ void codegen_js_program(const IrProgram *prog, FILE *out) {
 
     fprintf(out, "// Código gerado automaticamente a partir do IR\n\n");
 
-    /* Gera todas as funções */
+    /* DEBUG: Ver quantas funções temos */
+    fprintf(stderr, "DEBUG: Número de funções no programa: %zu\n", prog->func_count);
+    
+    /* 1) Gera todas as funções (inclusive _entry) */
     for (size_t i = 0; i < prog->func_count; ++i) {
-        codegen_js_func(prog->funcs[i], out);
+        const IrFunc *f = prog->funcs[i];
+        fprintf(stderr, "DEBUG: Gerando função %zu: %s\n", i, 
+                f->name ? f->name : "<unnamed>");
+        codegen_js_func(f, out);
     }
 
-    /* Chama _entry se existir */
+    /* 2) Se existir _entry, chamamos no final */
     int has_entry = 0;
     for (size_t i = 0; i < prog->func_count; ++i) {
         const IrFunc *f = prog->funcs[i];

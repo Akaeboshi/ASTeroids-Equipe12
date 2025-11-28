@@ -46,27 +46,25 @@ int main(int argc, char **argv) {
     }
 
     /* -----------------------------
-       3) IR (mesma lógica do ir_driver)
+       3) IR (usando irb_build_program - MESMO que irgen)
        ----------------------------- */
-    IrProgram *prog = ir_program_new();     // <-- AQUI é definido "prog"
-    IrFunc *entry = ir_func_begin(prog, "_entry", TY_VOID, NULL, 0);
-
-    irb_reset_state();
-
-    if (sr.ast->kind == ND_BLOCK) {
-        for (size_t i = 0; i < sr.ast->u.as_block.count; ++i) {
-            irb_emit_stmt(entry, sr.ast->u.as_block.stmts[i]);
-        }
-    } else {
-        irb_emit_stmt(entry, sr.ast);
+    IrProgram *prog = irb_build_program(sr.ast);
+    if (!prog) {
+        fprintf(stderr, "JS: falha ao construir programa IR.\n");
+        st_destroy(global);
+        ast_free(sr.ast);
+        return 1;
     }
 
-    ir_emit_ret(entry, false, (IrOperand){ .kind = IR_OPER_NONE });
-    ir_func_end(prog, entry);
+    // DEBUG: Verifique quantas funções foram recebidas
+    fprintf(stderr, "DEBUG JS: Número de funções no programa: %zu\n", prog->func_count);
+    for (size_t i = 0; i < prog->func_count; ++i) {
+        fprintf(stderr, "DEBUG JS: Função %zu: %s\n", i, 
+                prog->funcs[i]->name ? prog->funcs[i]->name : "<unnamed>");
+    }
 
     /* -----------------------------
        4) Geração JS → stdout
-       (para testes & para make jsfile redirecionar)
        ----------------------------- */
     codegen_js_program(prog, stdout);
 
