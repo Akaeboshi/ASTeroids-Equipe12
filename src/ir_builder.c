@@ -53,6 +53,22 @@ static void vt_restore_from(VarTemp *src) {
     g_vars = vt_clone_list(src);
 }
 
+static void vt_insert_manual(const char *name, int temp_id) {
+    // Verifica se já existe
+    for (VarTemp *v = g_vars; v; v = v->next) {
+        if (strcmp(v->name, name) == 0) {
+            v->temp = temp_id;
+            return;
+        }
+    }
+
+    VarTemp *nv = (VarTemp*)xmalloc(sizeof(VarTemp));
+    nv->name = name;
+    nv->temp = temp_id;
+    nv->next = g_vars;
+    g_vars   = nv;
+}
+
 void irb_reset_state(void) {
     vt_free_list(g_vars);
     g_vars = NULL;
@@ -361,4 +377,119 @@ void irb_emit_stmt(IrFunc *f, Node *s) {
         default:
             break;
     }
+}
+
+/* Emite o código IR para uma única função. */
+void irb_emit_func(IrProgram *p, Node *func_node) {
+    if (!func_node || func_node->kind != ND_FUNCTION) return;
+
+    Node *f_node = func_node;
+
+    // Armazena o nome e tipos do retorno/parâmetros.
+    const char *name = f_node->u.as_function.name;
+    TypeTag ret_type = f_node->u.as_function.ret_type;
+    size_t param_count = f_node->u.as_function.param_count;
+
+    // 1. Preencher tipos dos parâmetros
+    TypeTag *param_types = NULL;
+    if (param_count > 0) {
+        param_types = (TypeTag*)xmalloc(sizeof(TypeTag) * param_count);
+        for (size_t i = 0; i < param_count; ++i) {
+            Node *param_node = f_node->u.as_function.params[i];
+            param_types[i] = param_node->u.as_decl.type;
+        }
+    }
+
+    VarTemp *global_snapshot = vt_clone_list(g_vars);
+    irb_reset_state(); // Reseta g_vars (escopo local) e o estado do builder (implicitamente feito pelo driver)
+
+    // O ir_func_begin (em ir.c) já inicializa temp_count=0 e label_count=0.
+    IrFunc *f = ir_func_begin(p, name, ret_type, param_types, param_count);
+    if (param_types) free(param_types);
+
+    if (!f) {
+        vt_restore_from(global_snapshot);
+        vt_free_list(global_snapshot);
+        return;
+    }
+
+    // 2. Criar escopo interno e mapear Parâmetros
+
+    // Os parâmetros da função são t0, t1, t2, ...
+    for (size_t i = 0; i < param_count; ++i) {
+        Node *param_node   = f_node->u.as_function.params[i];
+        const char *pname  = param_node->u.as_decl.name;
+        int        temp_id = (int)i;      /* t0, t1, ... */
+
+        /* registra no map interno (g_vars) */
+        vt_insert_manual(pname, temp_id);
+
+        /* informa ao IR que existe uma variável local com esse nome/temp */
+        ir_register_local(f, pname, temp_id);
+
+        if (f->temp_count <= temp_id)
+            f->temp_count = temp_id + 1;
+    }
+
+    // 4. Emitir IR do corpo da função
+    irb_emit_stmt(f, f_node->u.as_function.body);
+
+    // 5. Gerar ret implícito para funções void
+    // Verifica se a última instrução é um RET.
+    bool needs_implicit_ret = true;
+    if (f->code_len > 0 && f->code[f->code_len - 1].op == IR_RET) {
+        needs_implicit_ret = false;
+    }
+
+    if (needs_implicit_ret && ret_type == TY_VOID) {
+        ir_emit_ret(f, false, (IrOperand){ .kind = IR_OPER_NONE });
+    }
+
+    // 3. Restaurar estado (escopo global)
+    vt_restore_from(global_snapshot);
+    vt_free_list(global_snapshot);
+
+    // Finaliza a função IR
+    ir_func_end(p, f);
+}
+
+IrProgram *irb_build_program(Node *program_node) {
+    if (!program_node) return NULL;
+
+    IrProgram *p = ir_program_new();
+    if (!p) return NULL;
+
+    /* Cria sempre um _entry para código de topo */
+    IrFunc *entry = ir_func_begin(p, "_entry", TY_VOID, NULL, 0);
+    irb_reset_state();
+
+    if (program_node->kind == ND_BLOCK) {
+        for (size_t i = 0; i < program_node->u.as_block.count; ++i) {
+            Node *n = program_node->u.as_block.stmts[i];
+
+            if (!n) continue;
+
+            if (n->kind == ND_FUNCTION) {
+                /* Função de topo vira função IR separada */
+                irb_emit_func(p, n);
+            } else {
+                /* Código de topo continua indo pra _entry */
+                irb_emit_stmt(entry, n);
+            }
+        }
+    } else {
+        /* Se for função de topo, cria função IR separada */
+        /* Se não for,vai para o _entry */
+        if (program_node->kind == ND_FUNCTION) {
+            irb_emit_func(p, program_node);
+        } else {
+            irb_emit_stmt(entry, program_node);
+        }
+    }
+
+    /* Gera return implícito no _entry */
+    ir_emit_ret(entry, false, (IrOperand){ .kind = IR_OPER_NONE });
+    ir_func_end(p, entry);
+
+    return p;
 }

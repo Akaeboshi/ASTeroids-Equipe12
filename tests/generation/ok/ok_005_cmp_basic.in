@@ -1,0 +1,13 @@
+bool a;
+bool b;
+bool c;
+bool d;
+bool e;
+bool f;
+
+a = 3 < 4;
+b = 3 <= 4;
+c = 5 > 2;
+d = 5 >= 2;
+e = 10 == 10;
+f = 10 != 20;

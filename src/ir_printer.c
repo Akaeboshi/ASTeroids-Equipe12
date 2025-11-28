@@ -114,6 +114,11 @@ void ir_print_program(const IrProgram *p) {
         }
         printf(") -> %s {\n", type_str(f->ret_type));
 
+
+        for (size_t k = 0; k < f->local_count; k++) {
+            printf("  .local %s -> t%d\n", f->locals[k].name, f->locals[k].temp);
+        }
+
         for (size_t j = 0; j < f->code_len; j++) {
             print_instr(&f->code[j]);
         }

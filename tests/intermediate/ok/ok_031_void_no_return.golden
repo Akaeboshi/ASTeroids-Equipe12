@@ -1,0 +1,9 @@
+func _entry() -> void {
+  ret
+}
+func hello() -> void {
+  .local x -> t0
+  t1 = mov 3
+  .local x -> t1
+  ret
+}
