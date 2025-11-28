@@ -13,18 +13,19 @@ Fim: 09/09
 - Definir se seria feito um compilador ou intepretador (todos)
 - Definir as linguagens para o compilador (todos)
 - Definir tamanho e quantas sprints o trabalho terá (todos)
+- Documentação do escopo (Maciel)
 
-  ## Sprint 2
+## Sprint 2
 
-  inicio: 10/09
-  Fim: 01/10
+inicio: 10/09
+Fim: 01/10
 
-  **Objetivos**
+**Objetivos**
 
-  - Adição do readme (heyttor)
-  - implementação da ast minima (maciel)
-  - implementação do parser (heyttor e ranni)
-  - implementação do scarnner (antonio e joão)
+- Adição do readme (heyttor)
+- implementação da ast minima (maciel)
+- implementação do parser (heyttor e ranni)
+- implementação do scarnner (antonio e joão)
 
 ## Sprint 3
 
@@ -70,3 +71,28 @@ fim: 15/10
   - Implementar inferência e checagem de tipos (João)
   - Erros semânticos: uso sem declaração (João)
   - Detectar identificadores não declarados (João)
+  - Documentação das sprints e metodologia (Heyttor)
+  - Documentação da estrutura 
+
+
+
+  ## Sprint 6
+
+  Inicio da sprint 13/11
+  Fim da sprint 28/11
+
+  **Objetivos**
+
+  - Construção da logica de golden teste make test (maciel)
+  - Suporte a declarações de tipos primitivos (maciel)
+  - Implementação da sfunções de retorno (maciel)
+  - Suporte a funções na geração IR (Heyttor)
+  - Criar testes IR (Ranni)
+  - Documentação da IR (Antonio)
+  - Implementação das comparações em IR e na geração do codigo final (Heyttor)
+  - Implementação das literias e mov em IR e na geração do codigo final (Maciel)
+  - Implementação da Aritmetica(+,-,* e / ) em IR e na geração do codigo final (Maciel)
+  - Implementação do controle de fluxo (labels e branches ) (Ranni)
+  - Implementação das Strings em IR e na geração do codigo final (Maciel,Antonio e João)
+  - Implementação dos testes de comparação na geração do codigo final (Heyttor e Marciel)
+  

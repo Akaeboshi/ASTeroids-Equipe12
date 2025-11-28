@@ -45,6 +45,18 @@
 - Struct: `SyntaxResult` - padroniza o resultado da análise sintática
 - Função: `syntax_parse_path()` - analisa arquivo ou stdin
 
+#### ir_builder.h
+- Função: Fornece a API para gerar o Intermediate Representation (IR) a partir da Árvore Sintática Abstrata (AST).
+-funções: `void irb_emit_stmt(IrFunc *f, Node *stmt)` -  Gera IR para um statement, `int  irb_emit_expr(IrFunc *f, Node *expr)` - Gera IR para uma expressão e retorna o temporário tN com o resultado , 
+
+#### ir_printer.h
+- Função: Fornece utilitários para visualização do IR — impressão textual, dump para debug e (opcionalmente) geração de formatos legíveis por ferramentas.
+- Funções: `void ir_print_program(const IrProgram *p)` - Imprime cada instrução do IR
+
+#### ir.h
+- Função: Define as estruturas e tipos que representam o Intermediate Representation (IR) do compilador.
+- Funções: `ir_program_new()` - Cria uma estrutura vazia de programa IR,`ir_program_free(p)`- Libera toda a memória associada ao programa IR,
+
 ## 📁 src/
 
 ### src/ - Implementação (.c) de toda a lógica do compilador
@@ -112,6 +124,15 @@
 #### syntax_analyzer.c
 - Função: Driver do analisador sintático
 - Função: `syntax_parse_path()` - coordena parsing de arquivo/stdin
+
+#### ir_builder.c
+- Função: Construtor do IR
+
+#### IR.c
+- Função gerador do codigo intermediario
+
+#### codegen_js.c
+- Função gerador final do codigo em js
 
 ## 📁 src/drivers/
 

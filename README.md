@@ -46,13 +46,42 @@ make run FILE=exemplos/if.txt
 
 ### 🧪 Rodar todos os testes
 
-Executa a suíte de testes automatizados:
-
+Executa a suíte de testes automatizados de geração de codigo:
 ```bash
-make test
+make test-codegen
 ```
 
 Ao final, o script exibirá um resumo dos testes que passaram e falharam.
+
+Executa a suíte de testes automatizados de lexico:
+```bash
+make test-lexer
+```
+
+Ao final, o script exibirá um resumo dos testes que passaram e falharam.
+
+Executa a suíte de testes automatizados de sintaticos:
+```bash
+make test-syntax
+```
+
+Ao final, o script exibirá um resumo dos testes que passaram e falharam.
+
+Executa a suíte de testes automatizados de semantica:
+```bash
+make test-semantic
+```
+
+Ao final, o script exibirá um resumo dos testes que passaram e falharam.
+
+Executa a suíte de testes automatizados de Codigo intermediario:
+```bash
+make test-ir
+```
+
+Ao final, o script exibirá um resumo dos testes que passaram e falharam.
+
+
 
 ### 🧹 Limpar artefatos gerados
 
