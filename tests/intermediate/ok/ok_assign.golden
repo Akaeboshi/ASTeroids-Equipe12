@@ -1,0 +1,8 @@
+func _entry() -> void {
+  t1 = mov 42
+  t2 = mov t1
+  t4 = mov 3.14
+  t5 = mov t4
+  t6 = mov t2
+  ret
+}

@@ -1,0 +1,4 @@
+bool a = 5 < 10;
+bool b = 5 == 5;
+bool c = 3.14 > 2.71;
+bool d = 8 != 7;

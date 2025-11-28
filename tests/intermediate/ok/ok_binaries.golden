@@ -1,0 +1,19 @@
+func _entry() -> void {
+  t1 = mov 5
+  t2 = mov 3
+  t3 = add t1, t2
+  t4 = mov t3
+  t6 = mov 10
+  t7 = mov 2
+  t8 = sub t6, t7
+  t9 = mov t8
+  t11 = mov 4
+  t12 = mov 2
+  t13 = mul t11, t12
+  t14 = mov t13
+  t16 = mov 8
+  t17 = mov 2
+  t18 = div t16, t17
+  t19 = mov t18
+  ret
+}
