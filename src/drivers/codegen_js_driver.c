@@ -57,11 +57,11 @@ int main(int argc, char **argv) {
     }
 
     // DEBUG: Verifique quantas funções foram recebidas
-    fprintf(stderr, "DEBUG JS: Número de funções no programa: %zu\n", prog->func_count);
-    for (size_t i = 0; i < prog->func_count; ++i) {
-        fprintf(stderr, "DEBUG JS: Função %zu: %s\n", i, 
-                prog->funcs[i]->name ? prog->funcs[i]->name : "<unnamed>");
-    }
+    // fprintf(stderr, "DEBUG JS: Número de funções no programa: %zu\n", prog->func_count);
+    // for (size_t i = 0; i < prog->func_count; ++i) {
+    //     fprintf(stderr, "DEBUG JS: Função %zu: %s\n", i,
+    //             prog->funcs[i]->name ? prog->funcs[i]->name : "<unnamed>");
+    // }
 
     /* -----------------------------
        4) Geração JS → stdout

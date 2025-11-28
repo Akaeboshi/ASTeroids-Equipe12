@@ -105,25 +105,25 @@ IrProgram *irb_build_program(Node *ast) {
     if (!ast) return NULL;
 
     IrProgram *prog = ir_program_new();
-    fprintf(stderr, "DEBUG BUILDER: Iniciando construção do programa IR\n");
+    // fprintf(stderr, "DEBUG BUILDER: Iniciando construção do programa IR\n");
 
     // Processa a AST: se for um bloco, processa cada statement
     if (ast->kind == ND_BLOCK) {
-        fprintf(stderr, "DEBUG BUILDER: AST é um bloco com %zu statements\n", ast->u.as_block.count);
-        
+        // fprintf(stderr, "DEBUG BUILDER: AST é um bloco com %zu statements\n", ast->u.as_block.count);
+
         // Primeiro: processa todas as funções
         for (size_t i = 0; i < ast->u.as_block.count; ++i) {
             Node *stmt = ast->u.as_block.stmts[i];
             if (stmt->kind == ND_FUNCTION) {
-                fprintf(stderr, "DEBUG BUILDER: Processando função %s\n", stmt->u.as_function.name);
-                
+                // fprintf(stderr, "DEBUG BUILDER: Processando função %s\n", stmt->u.as_function.name);
+
                 // Extrai informações da função
                 TypeTag ret_type = stmt->u.as_function.ret_type;
                 const char *name = stmt->u.as_function.name;
                 size_t param_count = stmt->u.as_function.param_count;
-                
-                fprintf(stderr, "DEBUG BUILDER: Função %s -> ret_type=%d, param_count=%zu\n", 
-                       name, ret_type, param_count);
+
+                // fprintf(stderr, "DEBUG BUILDER: Função %s -> ret_type=%d, param_count=%zu\n",
+                //        name, ret_type, param_count);
 
                 // Prepara array de tipos dos parâmetros
                 TypeTag *param_types = NULL;
@@ -132,29 +132,29 @@ IrProgram *irb_build_program(Node *ast) {
                     for (size_t j = 0; j < param_count; j++) {
                         Node *param = stmt->u.as_function.params[j];
                         param_types[j] = param->u.as_decl.type;
-                        fprintf(stderr, "DEBUG BUILDER: Parâmetro %zu: tipo=%d\n", j, param_types[j]);
+                        // fprintf(stderr, "DEBUG BUILDER: Parâmetro %zu: tipo=%d\n", j, param_types[j]);
                     }
                 }
 
                 // Cria a função no IR
                 IrFunc *func = ir_func_begin(prog, name, ret_type, param_types, param_count);
-                fprintf(stderr, "DEBUG BUILDER: Função %s criada no IR\n", name);
-                
+                // fprintf(stderr, "DEBUG BUILDER: Função %s criada no IR\n", name);
+
                 // Emite o corpo da função
                 irb_reset_state();
                 irb_emit_stmt(func, stmt->u.as_function.body);
                 ir_func_end(prog, func);
-                fprintf(stderr, "DEBUG BUILDER: Corpo da função %s emitido\n", name);
+                // fprintf(stderr, "DEBUG BUILDER: Corpo da função %s emitido\n", name);
 
                 if (param_types) free(param_types);
             }
         }
 
         // Segundo: cria função _entry para código global
-        fprintf(stderr, "DEBUG BUILDER: Criando função _entry para código global\n");
+        // fprintf(stderr, "DEBUG BUILDER: Criando função _entry para código global\n");
         IrFunc *entry = ir_func_begin(prog, "_entry", TY_VOID, NULL, 0);
         irb_reset_state();
-        
+
         int global_stmts = 0;
         for (size_t i = 0; i < ast->u.as_block.count; ++i) {
             Node *stmt = ast->u.as_block.stmts[i];
@@ -163,14 +163,14 @@ IrProgram *irb_build_program(Node *ast) {
                 global_stmts++;
             }
         }
-        fprintf(stderr, "DEBUG BUILDER: _entry tem %d statements globais\n", global_stmts);
-        
+        // fprintf(stderr, "DEBUG BUILDER: _entry tem %d statements globais\n", global_stmts);
+
         ir_emit_ret(entry, false, (IrOperand){.kind = IR_OPER_NONE});
         ir_func_end(prog, entry);
-        fprintf(stderr, "DEBUG BUILDER: Função _entry criada\n");
+        // fprintf(stderr, "DEBUG BUILDER: Função _entry criada\n");
     } else {
         // AST não é um bloco - cria apenas _entry
-        fprintf(stderr, "DEBUG BUILDER: AST não é bloco, criando apenas _entry\n");
+        // fprintf(stderr, "DEBUG BUILDER: AST não é bloco, criando apenas _entry\n");
         IrFunc *entry = ir_func_begin(prog, "_entry", TY_VOID, NULL, 0);
         irb_reset_state();
         irb_emit_stmt(entry, ast);
@@ -178,12 +178,12 @@ IrProgram *irb_build_program(Node *ast) {
         ir_func_end(prog, entry);
     }
 
-    fprintf(stderr, "DEBUG BUILDER: Programa IR construído com %zu funções\n", prog->func_count);
-    for (size_t i = 0; i < prog->func_count; ++i) {
-        fprintf(stderr, "DEBUG BUILDER: Função %zu no programa: %s\n", 
-               i, prog->funcs[i]->name ? prog->funcs[i]->name : "<unnamed>");
-    }
-    
+    // fprintf(stderr, "DEBUG BUILDER: Programa IR construído com %zu funções\n", prog->func_count);
+    // for (size_t i = 0; i < prog->func_count; ++i) {
+    //     fprintf(stderr, "DEBUG BUILDER: Função %zu no programa: %s\n",
+    //            i, prog->funcs[i]->name ? prog->funcs[i]->name : "<unnamed>");
+    // }
+
     return prog;
 }
 
