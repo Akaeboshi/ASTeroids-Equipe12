@@ -40,23 +40,14 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // 3) IR
-    IrProgram *prog = ir_program_new();
-
-    IrFunc *entry = ir_func_begin(prog, "_entry", TY_VOID, NULL, 0);
-
-    irb_reset_state();
-
-    if (sr.ast->kind == ND_BLOCK) {
-        for (size_t i = 0; i < sr.ast->u.as_block.count; ++i) {
-            irb_emit_stmt(entry, sr.ast->u.as_block.stmts[i]);
-        }
-    } else {
-        irb_emit_stmt(entry, sr.ast);
+    // 3) IR (agora via irb_build_program)
+    IrProgram *prog = irb_build_program(sr.ast);
+    if (!prog) {
+        fprintf(stderr, "IR: falha ao construir programa IR.\n");
+        st_destroy(global);
+        ast_free(sr.ast);
+        return 1;
     }
-
-    ir_emit_ret(entry, false, (IrOperand){.kind = IR_OPER_NONE});
-    ir_func_end(prog, entry);
 
     // 4) Imprime IR
     ir_print_program(prog);

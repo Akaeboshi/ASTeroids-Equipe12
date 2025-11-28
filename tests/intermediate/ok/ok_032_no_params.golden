@@ -1,0 +1,7 @@
+func _entry() -> void {
+  ret
+}
+func get_five() -> int {
+  t0 = mov 5
+  ret t0
+}
