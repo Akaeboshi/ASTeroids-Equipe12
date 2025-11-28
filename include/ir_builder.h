@@ -13,10 +13,14 @@ void irb_reset_state(void);
 /** Gera IR para um statement */
 void irb_emit_stmt(IrFunc *f, Node *stmt);
 
+
 /** Gera IR para uma expressão e retorna o temporário tN com o resultado */
 int  irb_emit_expr(IrFunc *f, Node *expr);
 
 /** Gera IR para uma função completa */
 IrProgram *irb_build_program(Node *program_node);
+
+/** Constrói um programa IR completo a partir da AST */
+IrProgram *irb_build_program(Node *ast);
 
 #endif

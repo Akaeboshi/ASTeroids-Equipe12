@@ -49,6 +49,13 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // DEBUG: Verifique quantas funções foram geradas
+    fprintf(stderr, "DEBUG IR: Número de funções no programa: %zu\n", prog->func_count);
+    for (size_t i = 0; i < prog->func_count; ++i) {
+        fprintf(stderr, "DEBUG IR: Função %zu: %s\n", i, 
+                prog->funcs[i]->name ? prog->funcs[i]->name : "<unnamed>");
+    }
+
     // 4) Imprime IR
     ir_print_program(prog);
 

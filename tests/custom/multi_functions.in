@@ -1,0 +1,18 @@
+int soma(int a, int b) {
+    return a + b;
+}
+
+float calcular(float x, float y) {
+    return x * y + 1.5;
+}
+
+void mensagem() {
+    // função void sem retorno
+}
+
+int main() {
+    int r1 = soma(3, 4);
+    float r2 = calcular(2.0, 3.0);
+    mensagem();
+    return r1;
+}

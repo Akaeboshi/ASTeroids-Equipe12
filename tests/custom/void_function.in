@@ -1,0 +1,9 @@
+void processar(int valor) {
+    int temp = valor * 10;
+    // sem return
+}
+
+int main() {
+    processar(5);
+    return 0;
+}
