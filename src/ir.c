@@ -88,6 +88,9 @@ IrFunc *ir_func_begin(IrProgram *p,
     f->code_cap    = 0;
     f->temp_count  = 0;
     f->label_count = 0;
+    f->locals      = NULL;
+    f->local_count = 0;
+    f->local_cap   = 0;
 
     if (param_count > 0) {
         f->params = (TypeTag*)xmalloc(sizeof(TypeTag)*param_count);
@@ -257,17 +260,15 @@ static void ir_func_grow_locals(IrFunc *f) {
 void ir_register_local(IrFunc *f, const char *name, int temp) {
     if (!f || !name) return;
 
-    /* se já existe essa variável, só atualiza o temp atual */
+    /* Não sobrescrevemos entradas antigas: cada temp mantém o nome associado. */
     for (size_t i = 0; i < f->local_count; ++i) {
-        if (strcmp(f->locals[i].name, name) == 0) {
-            f->locals[i].temp = temp;
-            return;
+        if (f->locals[i].temp == temp && strcmp(f->locals[i].name, name) == 0) {
+            return; /* já registramos este par nome/temp */
         }
     }
 
-    /* senão, insere uma nova variável local */
     ir_func_grow_locals(f);
-    f->locals[f->local_count].name = name;  /* nome vem da AST */
+    f->locals[f->local_count].name = name;
     f->locals[f->local_count].temp = temp;
     f->local_count++;
 }

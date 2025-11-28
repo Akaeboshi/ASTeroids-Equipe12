@@ -416,6 +416,7 @@ static void codegen_js_func(const IrFunc *f, FILE *out) {
 
         int current_case = 0;
         int has_instructions = 0;
+        int last_was_br_or_ret = 0;
 
         fprintf(out, "      case %d:\n", current_case);
 
@@ -424,23 +425,41 @@ static void codegen_js_func(const IrFunc *f, FILE *out) {
 
             if (ins.op == IR_LABEL) {
                 if (has_instructions) {
-                    fprintf(out, "        break;\n");
+                    int next_case = label_to_case(ins.label);
+
+                    if (!last_was_br_or_ret) {
+                        // fall-through para o próximo bloco (próxima label)
+                        fprintf(out, "        pc = %d; break;\n", next_case);
+                    } else {
+                        // bloco anterior já tinha br/ret → só fecha o case
+                        fprintf(out, "        break;\n");
+                    }
                 }
+
                 current_case = label_to_case(ins.label);
                 fprintf(out, "      case %d: // L%d\n", current_case, ins.label);
                 has_instructions = 0;
+                last_was_br_or_ret = 0;
             } else {
-                codegen_js_instr(f, &ins, out, 0 /* seq_mode = 0, modo labels */);
+                codegen_js_instr(f, &ins, out, 0);
+
                 has_instructions = 1;
+
+                if (ins.op == IR_BR || ins.op == IR_RET) {
+                    last_was_br_or_ret = 1;
+                } else {
+                    last_was_br_or_ret = 0;
+                }
             }
         }
 
+        // Fecha o último bloco
         if (has_instructions) {
+            // último bloco: se não terminou com br/ret, só dá um break;
             fprintf(out, "        break;\n");
         }
 
         fprintf(out, "    }\n");
-        fprintf(out, "    break;\n");
         fprintf(out, "  }\n");
 
     } else {

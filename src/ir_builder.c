@@ -33,6 +33,7 @@ static VarTemp* vt_clone_list(VarTemp *head) {
         VarTemp *nv = (VarTemp*)xmalloc(sizeof(VarTemp));
         nv->name = v->name;
         nv->temp = v->temp;
+        nv->depth = v->depth;
         nv->next = NULL;
         *tail = nv;
         tail = &nv->next;
@@ -257,17 +258,20 @@ int irb_emit_expr(IrFunc *f, Node *e) {
 
         case ND_ASSIGN: {
             int rv = irb_emit_expr(f, e->u.as_assign.value);
-            (void)vt_get(f, e->u.as_assign.name, true, TY_INT, NULL);
-            (void)ir_emit_mov(f, ir_temp(rv));
-            int last = f->temp_count - 1;
+
+            bool created = false;
+            (void)vt_get(f, e->u.as_assign.name, true, TY_INT, &created);
 
             for (VarTemp *v = g_vars; v; v = v->next) {
-                if (strcmp(v->name, e->u.as_assign.name) == 0) { v->temp = last; break; }
+                if (strcmp(v->name, e->u.as_assign.name) == 0) {
+                    v->temp = rv;
+                    break;
+                }
             }
 
-            ir_register_local(f, e->u.as_assign.name, last);
+            ir_register_local(f, e->u.as_assign.name, rv);
 
-            return last;
+            return rv;
         }
 
         case ND_EXPR:
@@ -429,22 +433,28 @@ void irb_emit_stmt(IrFunc *f, Node *s) {
             break;
 
         case ND_DECL: {
-            bool created = false;
-            int t = vt_get(f, s->u.as_decl.name, true, s->u.as_decl.type, &created);
+            const char *name = s->u.as_decl.name;
+            TypeTag type      = s->u.as_decl.type;
 
-            ir_register_local(f, s->u.as_decl.name, t);
+            bool created = false;
+            int t = vt_get(f, name, true, type, &created);
+            (void)t;
+
+            ir_register_local(f, name, t);
 
             if (s->u.as_decl.init) {
                 int rv = irb_emit_expr(f, s->u.as_decl.init);
-                (void)ir_emit_mov(f, ir_temp(rv));
-                int last = f->temp_count - 1;
 
                 for (VarTemp *v = g_vars; v; v = v->next) {
-                    if (strcmp(v->name, s->u.as_decl.name) == 0) { v->temp = last; break; }
+                    if (strcmp(v->name, name) == 0) {
+                        v->temp = rv;
+                        break;
+                    }
                 }
 
-                ir_register_local(f, s->u.as_decl.name, last);
+                ir_register_local(f, name, rv);
             }
+
             break;
         }
 
