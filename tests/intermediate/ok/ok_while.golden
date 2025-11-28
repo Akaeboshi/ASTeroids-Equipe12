@@ -1,0 +1,15 @@
+func _entry() -> void {
+  t1 = mov 0
+  t2 = mov t1
+  L0:
+  t3 = mov 5
+  t4 = lt t2, t3
+  brfalse t4, L2
+  L1:
+  t5 = mov 1
+  t6 = add t2, t5
+  t7 = mov t6
+  br L0
+  L2:
+  ret
+}

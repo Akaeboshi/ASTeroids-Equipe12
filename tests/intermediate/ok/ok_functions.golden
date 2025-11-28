@@ -1,0 +1,6 @@
+func _entry() -> void {
+  t0 = mov 5
+  t1 = mov 3
+  t2 = call soma(t0, t1) -> int
+  ret
+}

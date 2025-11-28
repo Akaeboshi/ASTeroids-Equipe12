@@ -1,0 +1,8 @@
+func _entry() -> void {
+  t0 = mov 42
+  t1 = mov 3.14
+  t2 = mov true
+  t3 = mov false
+  t4 = mov false
+  ret
+}

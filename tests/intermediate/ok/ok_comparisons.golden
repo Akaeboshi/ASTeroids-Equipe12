@@ -1,0 +1,19 @@
+func _entry() -> void {
+  t1 = mov 5
+  t2 = mov 10
+  t3 = lt t1, t2
+  t4 = mov t3
+  t6 = mov 5
+  t7 = mov 5
+  t8 = eq t6, t7
+  t9 = mov t8
+  t11 = mov 3.14
+  t12 = mov 2.71
+  t13 = gt t11, t12
+  t14 = mov t13
+  t16 = mov 8
+  t17 = mov 7
+  t18 = ne t16, t17
+  t19 = mov t18
+  ret
+}
