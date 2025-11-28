@@ -12,10 +12,12 @@
 typedef struct VarTemp {
     const char *name;
     int         temp;
+    int         depth;
     struct VarTemp *next;
 } VarTemp;
 
 static VarTemp *g_vars = NULL;
+static int g_scope_depth = 0; /* profundidade atual de escopo */
 
 /* xstrdup/xmalloc já existem em ast_base.c */
 extern void *xmalloc(size_t);
@@ -65,6 +67,7 @@ static void vt_insert_manual(const char *name, int temp_id) {
     VarTemp *nv = (VarTemp*)xmalloc(sizeof(VarTemp));
     nv->name = name;
     nv->temp = temp_id;
+    nv->depth = g_scope_depth;
     nv->next = g_vars;
     g_vars   = nv;
 }
@@ -72,6 +75,28 @@ static void vt_insert_manual(const char *name, int temp_id) {
 void irb_reset_state(void) {
     vt_free_list(g_vars);
     g_vars = NULL;
+    g_scope_depth = 0;
+}
+
+static void irb_enter_scope(void) {
+    g_scope_depth++;
+}
+
+static void irb_leave_scope(void) {
+    // Remove todas as variáveis declaradas neste nível
+    VarTemp **pp = &g_vars;
+    while (*pp) {
+        if ((*pp)->depth == g_scope_depth) {
+            VarTemp *dead = *pp;
+            *pp = dead->next;
+            free(dead);
+        } else {
+            pp = &(*pp)->next;
+        }
+    }
+    if (g_scope_depth > 0) {
+        g_scope_depth--;
+    }
 }
 
 /* retorna temp atual da var; se não existir e create_if_missing=true, cria um novo tN
@@ -90,6 +115,7 @@ static int vt_get(IrFunc *f, const char *name, bool create_if_missing, TypeTag d
     VarTemp *nv = (VarTemp*)xmalloc(sizeof(VarTemp));
     nv->name = name; /* NÃO duplico por padrão (nome vive na AST) */
     nv->temp = ir_new_temp(f);
+    nv->depth = g_scope_depth;
     nv->next = g_vars;
     g_vars   = nv;
     if (was_created) *was_created = true;
@@ -155,12 +181,12 @@ IrProgram *irb_build_program(Node *ast) {
         IrFunc *entry = ir_func_begin(prog, "_entry", TY_VOID, NULL, 0);
         irb_reset_state();
 
-        int global_stmts = 0;
+        // int global_stmts = 0;
         for (size_t i = 0; i < ast->u.as_block.count; ++i) {
             Node *stmt = ast->u.as_block.stmts[i];
             if (stmt->kind != ND_FUNCTION) {
                 irb_emit_stmt(entry, stmt);
-                global_stmts++;
+                // global_stmts++;
             }
         }
         // fprintf(stderr, "DEBUG BUILDER: _entry tem %d statements globais\n", global_stmts);
@@ -348,30 +374,35 @@ static int emit_binary(IrFunc *f, Node *n) {
  *  Statements
  * --------------------------------------------------------- */
 static void emit_block(IrFunc *f, Node *blk) {
+    irb_enter_scope();
+
     for (size_t i = 0; i < blk->u.as_block.count; ++i) {
         irb_emit_stmt(f, blk->u.as_block.stmts[i]);
     }
+
+    irb_leave_scope();
 }
 
 static void emit_if(IrFunc *f, Node *n) {
     int Lelse = ir_new_label(f);
     int Lend  = ir_new_label(f);
 
-    VarTemp *snapshot = vt_clone_list(g_vars);
-
     int c = irb_emit_expr(f, n->u.as_if.cond);
 
     ir_emit_brfalse(f, ir_temp(c), Lelse);
-    vt_restore_from(snapshot);
+
+    // THEN
     irb_emit_stmt(f, n->u.as_if.then_branch);
+
     ir_emit_br(f, Lend);
     ir_emit_label(f, Lelse);
-    vt_restore_from(snapshot);
 
-    if (n->u.as_if.else_branch) irb_emit_stmt(f, n->u.as_if.else_branch);
+    // ELSE
+    if (n->u.as_if.else_branch) {
+        irb_emit_stmt(f, n->u.as_if.else_branch);
+    }
+
     ir_emit_label(f, Lend);
-    vt_restore_from(snapshot);
-    vt_free_list(snapshot);
 }
 
 static void emit_while(IrFunc *f, Node *n) {
@@ -509,7 +540,7 @@ void irb_emit_func(IrProgram *p, Node *func_node) {
     for (size_t i = 0; i < param_count; ++i) {
         Node *param_node   = f_node->u.as_function.params[i];
         const char *pname  = param_node->u.as_decl.name;
-        int        temp_id = (int)i;      /* t0, t1, ... */
+        int temp_id = (int)i;      /* t0, t1, ... */
 
         /* registra no map interno (g_vars) */
         vt_insert_manual(pname, temp_id);
