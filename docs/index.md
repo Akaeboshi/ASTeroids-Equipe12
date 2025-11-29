@@ -28,6 +28,12 @@ O projeto será desenvolvido de forma incremental, acompanhando as fases de um c
 
 ## 📂 Estrutura da Documentação
 - [Escopo da Linguagem](escopo.md)
+- [Metodologia](metodologia.md)
+- [Definição das sprints](definicao_sprints.md)
+- [Estrutura do compilador](estrutura.md)
+- [Gramática Formal (CGF)](gramatica.md)
+- [Documento de Referência](referencia.md)
+- [Referência de tradução](ir_to_js.md)
 
 ---
 

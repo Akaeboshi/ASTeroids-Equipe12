@@ -81,6 +81,13 @@ make test-ir
 
 Ao final, o script exibirá um resumo dos testes que passaram e falharam.
 
+### 📝 Gerar código JavaScript a partir de um arquivo
+
+Gera automaticamente o código JavaScript correspondente ao arquivo de entrada, salvando o resultado em `build/js/.js`
+
+```bash
+make jsfile FILE=tests/generation/ok_meu_teste.in
+```
 
 
 ### 🧹 Limpar artefatos gerados
@@ -96,29 +103,68 @@ make clean
 ## 🗂️ Estrutura do Projeto
 
 ```text
-asreroids-equipe12/
-├── src/
-│   ├── parser.y          # Gramática principal (Bison)
-│   ├── scanner.l         # Analisador léxico (Flex)
-│   ├── ast_base.c/.h     # Estrutura base da AST
-│   ├── ast_expr.c/.h     # Expressões e operadores
-│   ├── ast_printer.c/.h  # Impressão da AST
-│   ├── ast_free.c/.h     # Liberação de memória da AST
-│   ├── main.c            # Programa principal (executa parser)
+ASTeroids-Equipe12/
+├── docs/                           # Documentação do projeto (relatórios, etc.)
 │
-├── include/              # Headers e definições globais
+├── include/                        # Headers públicos (interface dos módulos)
+│   ├── ast_base.h
+│   ├── ast_expr.h
+│   ├── ast_free.h
+│   ├── ast_printer.h
+│   ├── ast.h
+│   ├── codegen_js.h
+│   ├── ir_builder.h
+│   ├── ir_printer.h
+│   ├── ir.h
+│   ├── semantic_analyzer.h
+│   ├── symbol_table.h
+│   └── syntax_analyzer.h
+│
+├── src/
+│   ├── drivers/                    # Prgramas “main” para cada fase
+│   │   ├── codegen_js_driver.c     # Lê IR e gera JS
+│   │   ├── ir_driver.c             # Lê código-fonte e imprime IR
+│   │   ├── lexer_driver.c          # Teste isolado do léxico
+│   │   ├── semantic_driver.c       # Parser + semântica
+│   │   └── syntax_driver.c         # Parser (sintaxe) isolado
+│   │
+│   |                               # Implementação da AST
+│   ├── ast_base.c                  # Criação de nós, enums, helpers
+│   ├── ast_expr.c                  # Expressões, operadores, etc.
+│   ├── ast_free.c                  # Liberação de memória da AST
+│   ├── ast_printer.c               # Impressão/depuração da AST
+│   │
+│   ├── codegen_js.c                # Gerador de código JS a partir do IR
+│   ├── ir_builder.c                # AST -> IR (construção do código intermediário)
+│   ├── ir_printer.c                # Impressão de IR em formato textual
+│   ├── ir.c                        # Infraestrutura do IR (tipos, criação, etc.)
+│
+│   ├── irgen                       # binário (build) para gerar IR a partir do fonte
+│   ├── jsgen                       # binário (build) para gerar JS a partir do IR
+│
+│   ├── lex.yy.c                    # Código gerado pelo Flex
+│   ├── parser.y                    # Gramática (Bison)
+│   ├── parser.tab.c                # Parser gerado
+│   ├── parser.tab.h                # Headers do parser gerado
+│
+│   ├── scanner.l                   # Especificação léxica (Flex)
+│   ├── scanner/                    # (se existir: outros arquivos do léxico)
+│
+│   ├── semantic_analyzer.c         # Análise semântica (tipos, escopos, etc.)
+│   ├── symbol_table.c              # Implementação da tabela de símbolos
+│   └── syntax_analyzer.c           # análise sintática
 │
 ├── tests/
-│   ├── syntax/           # Casos de teste sintático
-│   ├── semantic/         # Casos de teste semântico
-│   ├── intermediate/     # Casos de código intermediário
-│   ├── generation/       # Casos de geração de código
-│   └── run.sh            # Script automatizado de testes
+│   ├── generation/                 # Casos de geração de código
+│   ├── intermediate/               # Casos de código intermediário
+│   ├── syntax/                     # Casos de teste sintático
+│   ├── lexer/                      # Casos de teste léxico
+│   ├── semantic/                   # Casos de teste semântico
+│   ├── syntax/                     # Casos de teste sintático
+│   └── run.sh                      # Script automatizado de testes
 │
-├── docs/                 # Documentação adicional (diagramas, relatórios)
-└── Makefile              # Automação de build, run e test
+└── Makefile                        # Regras de build, run, test
 ```
-
 ---
 
 ## 👥 Equipe
