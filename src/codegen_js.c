@@ -96,6 +96,34 @@ static void js_reset_temps(void) {
     g_temps = NULL;
 }
 
+/* Helper para imprimir qualquer tipo de operando (incluindo STRING) */
+static void js_print_operand(const IrFunc *f, IrOperand op, FILE *out) {
+    switch (op.kind) {
+        case IR_OPER_TEMP:
+            js_print_temp(f, op.v.temp, out);
+            break;
+        case IR_OPER_INT:
+            fprintf(out, "%lld", op.v.i);
+            break;
+        case IR_OPER_FLOAT:
+            fprintf(out, "%g", op.v.f);
+            break;
+        case IR_OPER_BOOL:
+            fprintf(out, "%s", op.v.b ? "true" : "false");
+            break;
+        case IR_OPER_STRING: /* <--- IMPLEMENTAÇÃO DO SUPORTE A STRING */
+            /* Imprime string entre aspas duplas */
+            fprintf(out, "\"%s\"", op.v.str);
+            break;
+        case IR_OPER_LABEL:
+            fprintf(out, "/* L%d */", op.v.label);
+            break;
+        default:
+            fprintf(out, "null");
+            break;
+    }
+}
+
 /* -------------------------------------------------------
  *  Geração de uma instrução JS
  *
@@ -108,7 +136,7 @@ static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out, int
     switch (ins->op) {
 
       /* ============================
-       * Controle de Fluxo (modo com labels)
+       * Controle de Fluxo
        * ============================ */
       case IR_BR:
             if (!seq_mode) {
@@ -119,7 +147,7 @@ static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out, int
       case IR_BRFALSE:
             if (!seq_mode) {
                 fprintf(out, "        if (!");
-                js_print_temp(f, ins->a.v.temp, out);
+                js_print_operand(f, ins->a, out);
                 fprintf(out, ") { pc = %d; break; }\n", label_to_case(ins->label));
             }
             break;
@@ -135,7 +163,7 @@ static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out, int
 
                 if (ins->a.kind != IR_OPER_NONE) {
                     fprintf(out, "  return ");
-                    js_print_temp(f, ins->a.v.temp, out);
+                    js_print_operand(f, ins->a, out);
                     fprintf(out, ";\n");
                 } else {
                     fprintf(out, "  return;\n");
@@ -144,7 +172,7 @@ static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out, int
                 /* modo com labels: mantém indentação antiga */
                 if (ins->a.kind != IR_OPER_NONE) {
                     fprintf(out, "        return ");
-                    js_print_temp(f, ins->a.v.temp, out);
+                    js_print_operand(f, ins->a, out);
                     fprintf(out, ";\n");
                 } else {
                     fprintf(out, "        return;\n");
@@ -153,12 +181,11 @@ static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out, int
             break;
 
       case IR_LABEL:
-            /* Labels só são relevantes no modo com labels (máquina de estados),
-               mas a 'estrutura' é gerada em codegen_js_func. Aqui, nada. */
+            /* Labels já foram tratados no switch/case externo */
             break;
 
       /* ============================
-       * Chamada de Função: IR_CALL
+       * Chamada de Função
        * ============================ */
       case IR_CALL: {
             const char *dst_name = NULL;
@@ -201,13 +228,12 @@ static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out, int
                 if (i) fprintf(out, ", ");
                 fprintf(out, "t%d", ins->args[i]);
             }
-
             fprintf(out, ");\n");
             break;
       }
 
       /* ============================
-       * MOV: tN = mov ...
+       * MOV
        * ============================ */
       case IR_MOV: {
         const char *var_name = js_name_for_temp(f, ins->dst);
@@ -215,14 +241,13 @@ static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out, int
         const char *vname = NULL;
 
         if (var_name) {
-          vname = var_name;
+            vname = var_name;
         } else {
             snprintf(buf, sizeof(buf), "t%d", ins->dst);
             vname = buf;
         }
 
         if (seq_mode) {
-            /* modo simples: usamos let na primeira vez */
             if (!js_declared(vname)) {
                 fprintf(out, "  let %s = ", vname);
                 js_mark_declared(vname);
@@ -230,22 +255,46 @@ static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out, int
                 fprintf(out, "  %s = ", vname);
             }
         } else {
-            /* modo com labels: já declaramos tudo no topo */
             fprintf(out, "        %s = ", vname);
         }
 
-        /* imprimir o operando */
-        if (ins->a.kind == IR_OPER_TEMP) {
-          js_print_temp(f, ins->a.v.temp, out);
-        } else if (ins->a.kind == IR_OPER_INT) {
-          fprintf(out, "%lld", ins->a.v.i);
-        } else if (ins->a.kind == IR_OPER_FLOAT) {
-          fprintf(out, "%g", ins->a.v.f);
-        } else if (ins->a.kind == IR_OPER_BOOL) {
-          fprintf(out, "%s", ins->a.v.b ? "true" : "false");
-        } else {
-          fprintf(out, "0");
+        js_print_operand(f, ins->a, out);
+
+        fprintf(out, ";\n");
+        break;
+    }
+
+      /* ============================
+       * CAST
+       * ============================ */
+      case IR_CAST: {
+        const char *vname = js_name_for_temp(f, ins->dst);
+        if (!vname) { fprintf(out, "        t%d = ", ins->dst); }
+        else        { fprintf(out, "        %s = ", vname); }
+
+        const char *cast_func = "";
+
+        /* Mapeamento baseado no ast_base.h que você enviou */
+        switch (ins->cast_to) {
+            case TY_INT:
+            case TY_FLOAT:
+                cast_func = "Number";
+                break;
+            case TY_BOOL:
+                cast_func = "Boolean";
+                break;
+            case TY_STRING:
+                cast_func = "String";
+                break;
+            default:
+                /* Tipos VOID ou INVALID não geram cast explícito normalmente */
+                break;
         }
+
+        /* Gera código JS: destino = CastFunc(valor) */
+        if (cast_func[0] != '\0') fprintf(out, "%s(", cast_func);
+        js_print_operand(f, ins->a, out);
+        if (cast_func[0] != '\0') fprintf(out, ")");
 
         fprintf(out, ";\n");
         break;
@@ -272,7 +321,7 @@ static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out, int
               vname = buf;
           }
 
-          const char *op_str = NULL;
+          const char *op_str = "?";
           switch (ins->op) {
               case IR_ADD: op_str = "+"; break;
               case IR_SUB: op_str = "-"; break;
@@ -284,7 +333,7 @@ static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out, int
               case IR_GE: op_str = ">="; break;
               case IR_EQ: op_str = "==="; break;
               case IR_NE: op_str = "!=="; break;
-              default:     op_str = "?"; break;
+              default: break;
           }
 
           if (seq_mode) {
@@ -299,32 +348,12 @@ static void codegen_js_instr(const IrFunc *f, const IrInstr *ins, FILE *out, int
           }
 
           /* lado esquerdo (a) */
-          if (ins->a.kind == IR_OPER_TEMP) {
-              js_print_temp(f, ins->a.v.temp, out);
-          } else if (ins->a.kind == IR_OPER_INT) {
-              fprintf(out, "%lld", ins->a.v.i);
-          } else if (ins->a.kind == IR_OPER_FLOAT) {
-              fprintf(out, "%g", ins->a.v.f);
-          } else if (ins->a.kind == IR_OPER_BOOL) {
-              fprintf(out, "%s", ins->a.v.b ? "true" : "false");
-          } else {
-              fprintf(out, "0");
-          }
+          js_print_operand(f, ins->a, out);
 
           fprintf(out, " %s ", op_str);
 
           /* lado direito (b) */
-          if (ins->b.kind == IR_OPER_TEMP) {
-              js_print_temp(f, ins->b.v.temp, out);
-          } else if (ins->b.kind == IR_OPER_INT) {
-              fprintf(out, "%lld", ins->b.v.i);
-          } else if (ins->b.kind == IR_OPER_FLOAT) {
-              fprintf(out, "%g", ins->b.v.f);
-          } else if (ins->b.kind == IR_OPER_BOOL) {
-              fprintf(out, "%s", ins->b.v.b ? "true" : "false");
-          } else {
-              fprintf(out, "0");
-          }
+          js_print_operand(f, ins->b, out);
 
           fprintf(out, ";\n");
           break;
