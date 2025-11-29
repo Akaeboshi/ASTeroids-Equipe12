@@ -1,0 +1,13 @@
+// Código gerado automaticamente a partir do IR
+
+function somaConstante() {
+  let x = 2;
+  let y = 3;
+  let t4 = x + y;
+  return t4;
+}
+
+function _entry() {
+}
+
+_entry();

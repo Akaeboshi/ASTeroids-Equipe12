@@ -167,6 +167,13 @@
         return op;
     }
 
+    static inline IrOperand ir_string(const char *s) {
+        IrOperand o;
+        o.kind  = IR_OPER_STRING;
+        o.v.str = s;
+        return o;
+    }
+
     /* ================================
     *  Emissão de instruções
     * ================================ */

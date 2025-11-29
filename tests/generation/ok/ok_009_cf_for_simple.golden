@@ -1,0 +1,27 @@
+// Código gerado automaticamente a partir do IR
+
+function _entry() {
+  let t0, t1, t2, t3, t4, t5, t6, pc = 0;
+  while (true) {
+    switch (pc) {
+      case 0:
+        i = 0;
+        pc = 1; break;
+      case 1: // L0
+        t2 = 3;
+        t3 = i < t2;
+        if (!t3) { pc = 3; break; }
+        pc = 2; break;
+      case 2: // L1
+        t5 = 1;
+        i = i + t5;
+        pc = 1; break;
+        break;
+      case 3: // L2
+        return;
+        break;
+    }
+  }
+}
+
+_entry();

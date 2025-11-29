@@ -1,30 +1,24 @@
 // Código gerado automaticamente a partir do IR
 
 function _entry() {
-  let t6 = 3;
-  let t7 = 4;
-  let t8 = t6 < t7;
-  let a = t8;
-  let t10 = 3;
-  let t11 = 4;
-  let t12 = t10 <= t11;
-  let b = t12;
-  let t14 = 5;
-  let t15 = 2;
-  let t16 = t14 > t15;
-  let c = t16;
-  let t18 = 5;
-  let t19 = 2;
-  let t20 = t18 >= t19;
-  let d = t20;
-  let t22 = 10;
-  let t23 = 10;
-  let t24 = t22 === t23;
-  let e = t24;
-  let t26 = 10;
-  let t27 = 20;
-  let t28 = t26 !== t27;
-  let f = t28;
+  let t1 = 3;
+  let t2 = 4;
+  let a = t1 < t2;
+  let t5 = 3;
+  let t6 = 4;
+  let b = t5 <= t6;
+  let t9 = 5;
+  let t10 = 2;
+  let c = t9 > t10;
+  let t13 = 5;
+  let t14 = 2;
+  let d = t13 >= t14;
+  let t17 = 10;
+  let t18 = 10;
+  let e = t17 === t18;
+  let t21 = 10;
+  let t22 = 20;
+  let f = t21 !== t22;
 }
 
 _entry();

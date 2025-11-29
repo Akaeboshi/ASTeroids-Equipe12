@@ -3,8 +3,7 @@
 function _entry() {
   let t1 = 3;
   let t2 = 4;
-  let t3 = t1 + t2;
-  let x = t3;
+  let x = t1 + t2;
 }
 
 _entry();

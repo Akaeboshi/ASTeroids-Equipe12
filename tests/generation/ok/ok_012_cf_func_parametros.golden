@@ -1,7 +1,11 @@
 // Código gerado automaticamente a partir do IR
 
+function soma(p0, p1) {
+  let t2 = t0 + t1;
+  return t2;
+}
+
 function _entry() {
-  let x = 5;
 }
 
 _entry();

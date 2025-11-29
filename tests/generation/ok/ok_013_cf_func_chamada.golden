@@ -1,0 +1,17 @@
+// Código gerado automaticamente a partir do IR
+
+function soma(p0, p1) {
+  let t2 = t0 + t1;
+  return t2;
+}
+
+function main() {
+  let t1 = 2;
+  let t2 = 3;
+  let r = soma(t1, t2);
+}
+
+function _entry() {
+}
+
+_entry();

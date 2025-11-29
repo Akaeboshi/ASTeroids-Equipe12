@@ -1,7 +1,8 @@
 // Código gerado automaticamente a partir do IR
 
 function _entry() {
-  let x = 5;
+  let s = "ola";
+  let t = "mundo";
 }
 
 _entry();
