@@ -11,10 +11,10 @@
       
       
       
-        <link rel="prev" href="../estrutura/">
+        <link rel="prev" href="../definicao_sprints/">
       
       
-        <link rel="next" href="../referencia/">
+        <link rel="next" href="../gramatica/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Gramática Formal (CGF) - Trabalho de Compiladores</title>
+        <title>Estrutura do compilador - Trabalho de Compiladores</title>
       
     
     
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#gramatica-formal-cfg-do-subconjunto-de-c" class="md-skip">
+        <a href="#estrutura-do-projeto-de-compilador" class="md-skip">
           Ir para o conteúdo
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Gramática Formal (CGF)
+              Estrutura do compilador
             
           </span>
         </div>
@@ -365,33 +365,6 @@
       
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../estrutura/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Estrutura do compilador
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
     
   
   
@@ -411,7 +384,7 @@
   <span class="md-ellipsis">
     
   
-    Gramática Formal (CGF)
+    Estrutura do compilador
   
 
     
@@ -429,7 +402,7 @@
   <span class="md-ellipsis">
     
   
-    Gramática Formal (CGF)
+    Estrutura do compilador
   
 
     
@@ -455,33 +428,45 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#simbolo-inicial" class="md-nav__link">
+  <a href="#include" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Símbolo inicial
+        📁 Include/
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📁 Include/">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#include-cabecalhos-h-com-definicoes-de-estruturas-e-interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Include/ - Cabeçalhos (.h) com definições de estruturas e interfaces
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Include/ - Cabeçalhos (.h) com definições de estruturas e interfaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#asth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ast.h
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#declaracoes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Declarações
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Declarações">
-      <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#tipos-suportados" class="md-nav__link">
+  <a href="#ast_baseh" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tipos suportados:
+        ast_base.h
       
     </span>
   </a>
@@ -489,22 +474,98 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#declaracoes_1" class="md-nav__link">
+  <a href="#ast_exprh" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Declarações:
+        ast_expr.h
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Declarações:">
-      <ul class="md-nav__list">
+</li>
         
           <li class="md-nav__item">
-  <a href="#exemplos-validos" class="md-nav__link">
+  <a href="#ast_freeh" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Exemplos válidos:
+        ast_free.h
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ast_printerh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ast_printer.h
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#symbol_tableh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        symbol_table.h
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#semantic_analyzerh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        semantic_analyzer.h
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#syntax_analyzerh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        syntax_analyzer.h
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ir_builderh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ir_builder.h
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ir_printerh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ir_printer.h
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#irh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ir.h
       
     </span>
   </a>
@@ -522,22 +583,34 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#comandos" class="md-nav__link">
+  <a href="#src" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Comandos
+        📁 src/
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Comandos">
+    <nav class="md-nav" aria-label="📁 src/">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#blocos-e-lista-de-comandos" class="md-nav__link">
+  <a href="#src-implementacao-c-de-toda-a-logica-do-compilador" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Blocos e lista de comandos:
+        src/ - Implementação (.c) de toda a lógica do compilador
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="src/ - Implementação (.c) de toda a lógica do compilador">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ast_basec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ast_base.c
       
     </span>
   </a>
@@ -545,10 +618,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#comandos-possiveis" class="md-nav__link">
+  <a href="#ast_exprc" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Comandos possíveis:
+        ast_expr.c
       
     </span>
   </a>
@@ -556,22 +629,109 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#atribuicoes" class="md-nav__link">
+  <a href="#ast_freec" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Atribuições:
+        ast_free.c
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Atribuições:">
-      <ul class="md-nav__list">
+</li>
         
           <li class="md-nav__item">
-  <a href="#exemplos-validos_1" class="md-nav__link">
+  <a href="#ast_printerc" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Exemplos válidos:
+        ast_printer.c
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parsery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        parser.y
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scannerl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scanner.l
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#semantic_analyzerc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        semantic_analyzer.c
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#symbol_tablec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        symbol_table.c
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#syntax_analyzerc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        syntax_analyzer.c
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ir_builderc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ir_builder.c
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#irc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IR.c
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#codegen_jsc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        codegen_js.c
       
     </span>
   </a>
@@ -580,73 +740,6 @@
         
       </ul>
     </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ifelse" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        If/Else:
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="If/Else:">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#exemplo-valido" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Exemplo válido:
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#while" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        While:
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="While:">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#exemplo-valido_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Exemplo válido:
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#for" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        For:
-      
-    </span>
-  </a>
   
 </li>
         
@@ -656,35 +749,119 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#precedencia-de-operadores" class="md-nav__link">
+  <a href="#srcdrivers" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Precedência de Operadores
+        📁 src/drivers/
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📁 src/drivers/">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#srcdrivers-programas-de-teste-independentes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        src/drivers/ - Programas de teste independentes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="src/drivers/ - Programas de teste independentes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lexer_driverc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lexer_driver.c
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#lexico-terminais" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#syntax_driverc" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Léxico (terminais)
+        syntax_driver.c
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#historico-de-versoes" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#semantic_driverc" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Histórico de Versões
+        semantic_driver.c
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arquitetura-geral" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arquitetura Geral
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Arquitetura Geral">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fluxo-de-compilacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fluxo de Compilação:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#caracteristicas-da-linguagem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Características da Linguagem:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#design-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design Patterns:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -692,6 +869,33 @@
   
 </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gramatica/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gramática Formal (CGF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -777,33 +981,45 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#simbolo-inicial" class="md-nav__link">
+  <a href="#include" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Símbolo inicial
+        📁 Include/
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📁 Include/">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#include-cabecalhos-h-com-definicoes-de-estruturas-e-interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Include/ - Cabeçalhos (.h) com definições de estruturas e interfaces
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Include/ - Cabeçalhos (.h) com definições de estruturas e interfaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#asth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ast.h
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#declaracoes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Declarações
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Declarações">
-      <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#tipos-suportados" class="md-nav__link">
+  <a href="#ast_baseh" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tipos suportados:
+        ast_base.h
       
     </span>
   </a>
@@ -811,22 +1027,98 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#declaracoes_1" class="md-nav__link">
+  <a href="#ast_exprh" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Declarações:
+        ast_expr.h
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Declarações:">
-      <ul class="md-nav__list">
+</li>
         
           <li class="md-nav__item">
-  <a href="#exemplos-validos" class="md-nav__link">
+  <a href="#ast_freeh" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Exemplos válidos:
+        ast_free.h
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ast_printerh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ast_printer.h
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#symbol_tableh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        symbol_table.h
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#semantic_analyzerh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        semantic_analyzer.h
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#syntax_analyzerh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        syntax_analyzer.h
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ir_builderh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ir_builder.h
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ir_printerh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ir_printer.h
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#irh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ir.h
       
     </span>
   </a>
@@ -844,22 +1136,34 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#comandos" class="md-nav__link">
+  <a href="#src" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Comandos
+        📁 src/
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Comandos">
+    <nav class="md-nav" aria-label="📁 src/">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#blocos-e-lista-de-comandos" class="md-nav__link">
+  <a href="#src-implementacao-c-de-toda-a-logica-do-compilador" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Blocos e lista de comandos:
+        src/ - Implementação (.c) de toda a lógica do compilador
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="src/ - Implementação (.c) de toda a lógica do compilador">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ast_basec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ast_base.c
       
     </span>
   </a>
@@ -867,10 +1171,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#comandos-possiveis" class="md-nav__link">
+  <a href="#ast_exprc" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Comandos possíveis:
+        ast_expr.c
       
     </span>
   </a>
@@ -878,22 +1182,109 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#atribuicoes" class="md-nav__link">
+  <a href="#ast_freec" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Atribuições:
+        ast_free.c
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Atribuições:">
-      <ul class="md-nav__list">
+</li>
         
           <li class="md-nav__item">
-  <a href="#exemplos-validos_1" class="md-nav__link">
+  <a href="#ast_printerc" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Exemplos válidos:
+        ast_printer.c
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parsery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        parser.y
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scannerl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scanner.l
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#semantic_analyzerc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        semantic_analyzer.c
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#symbol_tablec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        symbol_table.c
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#syntax_analyzerc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        syntax_analyzer.c
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ir_builderc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ir_builder.c
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#irc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IR.c
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#codegen_jsc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        codegen_js.c
       
     </span>
   </a>
@@ -902,73 +1293,6 @@
         
       </ul>
     </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ifelse" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        If/Else:
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="If/Else:">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#exemplo-valido" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Exemplo válido:
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#while" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        While:
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="While:">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#exemplo-valido_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Exemplo válido:
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#for" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        For:
-      
-    </span>
-  </a>
   
 </li>
         
@@ -978,35 +1302,119 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#precedencia-de-operadores" class="md-nav__link">
+  <a href="#srcdrivers" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Precedência de Operadores
+        📁 src/drivers/
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📁 src/drivers/">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#srcdrivers-programas-de-teste-independentes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        src/drivers/ - Programas de teste independentes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="src/drivers/ - Programas de teste independentes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lexer_driverc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lexer_driver.c
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#lexico-terminais" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#syntax_driverc" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Léxico (terminais)
+        syntax_driver.c
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#historico-de-versoes" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#semantic_driverc" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Histórico de Versões
+        semantic_driver.c
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arquitetura-geral" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arquitetura Geral
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Arquitetura Geral">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fluxo-de-compilacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fluxo de Compilação:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#caracteristicas-da-linguagem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Características da Linguagem:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#design-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design Patterns:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1030,107 +1438,205 @@
   
 
 
-<h1 id="gramatica-formal-cfg-do-subconjunto-de-c">Gramática Formal (CFG) do Subconjunto de C++</h1>
-<p>Este documento descreve a gramática livre de contexto (CFG) correspondente ao subconjunto da linguagem C++ definido no <a href="../escopo/" target="_blank"><strong>Escopo da Linguagem</strong></a>. Ela servirá como base para o desenvolvimento do <strong>analisador sintático</strong> utilizando Bison.</p>
-<hr />
-<h2 id="simbolo-inicial">Símbolo inicial</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Program → DeclOrStmtList
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>DeclOrStmtList → (DeclOrStmt)*
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>DeclOrStmt     → Decl &#39;;&#39; | Stmt
-</code></pre></div>
-<hr />
-<h2 id="declaracoes">Declarações</h2>
-<h3 id="tipos-suportados">Tipos suportados:</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Type → &#39;int&#39; | &#39;float&#39; | &#39;bool&#39; | &#39;string&#39;
-</code></pre></div>
-<h3 id="declaracoes_1">Declarações:</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Decl → Type IDENTIFIER ( &#39;=&#39; Expr )?
-</code></pre></div>
-<h4 id="exemplos-validos">Exemplos válidos:</h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kt">float</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">3.14</span><span class="p">;</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="kt">bool</span><span class="w"> </span><span class="n">ativo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">string</span><span class="w"> </span><span class="n">nome</span><span class="p">;</span>
-</code></pre></div>
-<hr />
-<h2 id="comandos">Comandos</h2>
-<h3 id="blocos-e-lista-de-comandos">Blocos e lista de comandos:</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Block   → &#39;{&#39; StmtList? &#39;}&#39;
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>StmtList→ (Stmt)+
-</code></pre></div>
-<h3 id="comandos-possiveis">Comandos possíveis:</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Stmt → Assign &#39;;&#39;
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>     | If
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>     | While
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>     | For
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>     | Expr &#39;;&#39;
-</code></pre></div>
-<h3 id="atribuicoes">Atribuições:</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Assign → IDENTIFIER &#39;=&#39; Expr
-</code></pre></div>
-<h4 id="exemplos-validos_1">Exemplos válidos:</h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2.5</span><span class="p">;</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">ativo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">y</span><span class="p">);</span>
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="n">nome</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;teste&quot;</span><span class="p">;</span>
-</code></pre></div>
-<h3 id="ifelse">If/Else:</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>If → &#39;if&#39; &#39;(&#39; Expr &#39;)&#39; Stmt (&#39;else&#39; Stmt)?
-</code></pre></div>
-<h4 id="exemplo-valido">Exemplo válido:</h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="p">}</span>
-</code></pre></div>
-<h3 id="while">While:</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>While → &#39;while&#39; &#39;(&#39; Expr &#39;)&#39; Stmt
-</code></pre></div>
-<h4 id="exemplo-valido_1">Exemplo válido:</h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">y</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="p">}</span>
-</code></pre></div>
-<h3 id="for">For:</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>For     → &#39;for&#39; &#39;(&#39; ForInit? &#39;;&#39; ForCond? &#39;;&#39; ForStep? &#39;)&#39; Stmt
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>ForInit → Decl | Assign
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>ForCond → Expr
-<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>ForStep → Assign
-</code></pre></div>
-<p><strong>Exemplo válido:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">    </span><span class="n">soma</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">soma</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="p">}</span>
-</code></pre></div></p>
-<hr />
-<h2 id="precedencia-de-operadores">Precedência de Operadores</h2>
-<ol>
-<li><code>()</code> — Parênteses</li>
-<li><code>!</code>, <code>-</code> — Unários</li>
-<li><code>*</code>, <code>/</code> — Multiplicativos</li>
-<li><code>+</code>, <code>-</code> — Aditivos</li>
-<li><code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code> — Relacionais</li>
-<li><code>==</code>, <code>!=</code> — Igualdade</li>
-<li><code>&amp;&amp;</code> — Lógico AND</li>
-<li><code>||</code> — Lógico OR</li>
-</ol>
-<hr />
-<h2 id="lexico-terminais">Léxico (terminais)</h2>
+<h1 id="estrutura-do-projeto-de-compilador">Estrutura do Projeto de Compilador</h1>
+<h2 id="include">📁 Include/</h2>
+<h3 id="include-cabecalhos-h-com-definicoes-de-estruturas-e-interfaces">Include/ - Cabeçalhos (.h) com definições de estruturas e interfaces</h3>
 <ul>
-<li><strong>Identificadores</strong>: <code>IDENTIFIER</code></li>
-<li><strong>Literais</strong>:</li>
-<li><code>INT_LIT</code> → números inteiros (ex.: <code>10</code>, <code>42</code>)</li>
-<li><code>FLOAT_LIT</code> → números de ponto flutuante (ex.: <code>3.14</code>, <code>0.5</code>)</li>
-<li><code>STRING_LIT</code> → cadeias de caracteres entre aspas (ex.: <code>"abc"</code>)</li>
-<li><code>BOOL_LIT</code> → <code>true</code> | <code>false</code></li>
-<li><strong>Palavras-chave</strong>: <code>int</code>, <code>float</code>, <code>bool</code>, <code>string</code>, <code>if</code>, <code>else</code>, <code>while</code>, <code>for</code></li>
-<li><strong>Símbolos/operadores</strong>:
-  <code>= + - * / == != &lt; &gt; &lt;= &gt;= &amp;&amp; || ! ( ) { } ; ,</code></li>
+<li>AST, tabela de símbolos, analisadores sintático/semântico</li>
 </ul>
-<hr />
-<h2 id="historico-de-versoes">Histórico de Versões</h2>
+<h4 id="asth">ast.h</h4>
+<ul>
+<li>Função: Header principal da AST que inclui todos os outros headers relacionados</li>
+<li>Depende de: <code>ast_base.h</code>, <code>ast_expr.h</code>, <code>ast_printer.h</code>, <code>ast_free.h</code>, <code>symbol_table.h</code></li>
+<li>Função: Facilita o include de toda a estrutura de AST em um único arquivo</li>
+</ul>
+<h4 id="ast_baseh">ast_base.h</h4>
+<ul>
+<li>Função: Define a estrutura fundamental da Árvore Sintática Abstrata (AST)</li>
+<li>Componentes:</li>
+<li>Enums: <code>TypeTag</code> (tipos), <code>NodeKind</code> (tipos de nós), <code>BinOp</code> (operações binárias), <code>UnOp</code> (operações unárias)</li>
+<li>Struct <code>Node</code>: União que representa todos os tipos possíveis de nós da AST</li>
+<li>Funções utilitárias: <code>xmalloc()</code>, <code>xstrdup()</code>, <code>new_node()</code>, <code>ast_copy()</code></li>
+</ul>
+<h4 id="ast_exprh">ast_expr.h</h4>
+<ul>
+<li>Função: Declara funções construtoras para cada tipo de nó da AST</li>
+<li>Funções: Construtores para literais, expressões, declarações, estruturas de controle, funções</li>
+</ul>
+<h4 id="ast_freeh">ast_free.h</h4>
+<ul>
+<li>Função: Interface para liberação de memória da AST</li>
+<li>Função: <code>ast_free()</code> - libera recursivamente toda a árvore</li>
+</ul>
+<h4 id="ast_printerh">ast_printer.h</h4>
+<ul>
+<li>Função: Interface para impressão da AST</li>
+<li>Funções: <code>ast_print()</code> (formato compacto), <code>ast_print_pretty()</code> (formato indentado)</li>
+</ul>
+<h4 id="symbol_tableh">symbol_table.h</h4>
+<ul>
+<li>Função: Define a estrutura da tabela de símbolos com escopos</li>
+<li>Componentes:</li>
+<li>Struct <code>Symbol</code>: Representa um símbolo (nome, tipo, valor)</li>
+<li>Struct <code>SymbolTable</code>: Tabela hash com encadeamento e suporte a escopos aninhados</li>
+<li>Operações: inserção, busca, atualização, remoção (com versões recursivas para escopos)</li>
+</ul>
+<h4 id="semantic_analyzerh">semantic_analyzer.h</h4>
+<ul>
+<li>Função: Interface do analisador semântico</li>
+<li>Funções: <code>check_semantics()</code> (executa análise), <code>semantics_ok()</code> (verifica se não há erros)</li>
+</ul>
+<h4 id="syntax_analyzerh">syntax_analyzer.h</h4>
+<ul>
+<li>Função: Interface do analisador sintático</li>
+<li>Struct: <code>SyntaxResult</code> - padroniza o resultado da análise sintática</li>
+<li>Função: <code>syntax_parse_path()</code> - analisa arquivo ou stdin</li>
+</ul>
+<h4 id="ir_builderh">ir_builder.h</h4>
+<ul>
+<li>Função: Fornece a API para gerar o Intermediate Representation (IR) a partir da Árvore Sintática Abstrata (AST).
+-funções: <code>void irb_emit_stmt(IrFunc *f, Node *stmt)</code> -  Gera IR para um statement, <code>int  irb_emit_expr(IrFunc *f, Node *expr)</code> - Gera IR para uma expressão e retorna o temporário tN com o resultado , </li>
+</ul>
+<h4 id="ir_printerh">ir_printer.h</h4>
+<ul>
+<li>Função: Fornece utilitários para visualização do IR — impressão textual, dump para debug e (opcionalmente) geração de formatos legíveis por ferramentas.</li>
+<li>Funções: <code>void ir_print_program(const IrProgram *p)</code> - Imprime cada instrução do IR</li>
+</ul>
+<h4 id="irh">ir.h</h4>
+<ul>
+<li>Função: Define as estruturas e tipos que representam o Intermediate Representation (IR) do compilador.</li>
+<li>Funções: <code>ir_program_new()</code> - Cria uma estrutura vazia de programa IR,<code>ir_program_free(p)</code>- Libera toda a memória associada ao programa IR,</li>
+</ul>
+<h2 id="src">📁 src/</h2>
+<h3 id="src-implementacao-c-de-toda-a-logica-do-compilador">src/ - Implementação (.c) de toda a lógica do compilador</h3>
+<ul>
+<li>Construtores de AST, análise léxica/sintática/semântica, gerenciamento de memória</li>
+</ul>
+<h4 id="ast_basec">ast_base.c</h4>
+<ul>
+<li>Função: Implementa funções básicas da AST</li>
+<li>Funções Principais:</li>
+<li><code>xmalloc()</code>, <code>xstrdup()</code> - alocação segura de memória</li>
+<li><code>new_node()</code> - cria novo nó</li>
+<li><code>ast_copy()</code> - cópia profunda completa da AST</li>
+</ul>
+<h4 id="ast_exprc">ast_expr.c</h4>
+<ul>
+<li>Função: Implementa construtores de nós da AST</li>
+<li>Cobertura: Todos os tipos de nós definidos em <code>ast_base.h</code></li>
+<li>Destaque: <code>ast_block_add_stmt()</code> - gerencia array dinâmico de statements</li>
+</ul>
+<h4 id="ast_freec">ast_free.c</h4>
+<ul>
+<li>Função: Liberação recursiva de memória da AST</li>
+<li>Implementação: Switch que trata cada tipo de nó especificamente</li>
+</ul>
+<h4 id="ast_printerc">ast_printer.c</h4>
+<ul>
+<li>Função: Implementa impressão da AST em dois formatos</li>
+<li>Funções:</li>
+<li><code>ast_print()</code> - formato linear (para máquina)</li>
+<li><code>ast_print_pretty()</code> - formato indentado (para humanos)</li>
+<li>Helpers: Conversores de enums para strings</li>
+</ul>
+<h4 id="parsery">parser.y</h4>
+<ul>
+<li>Função: Gramática Bison do compilador</li>
+<li>Características:</li>
+<li>Gramática LALR(1) completa da linguagem</li>
+<li>Suporte a expressões, declarações, estruturas de controle, funções</li>
+<li>Precedência e associatividade de operadores</li>
+<li>Recuperação de erros sintáticos</li>
+<li>Constrói AST durante o parsing</li>
+</ul>
+<h4 id="scannerl">scanner.l</h4>
+<ul>
+<li>Função: Analisador léxico Flex</li>
+<li>Tokenização: Reconhece literais, identificadores, operadores, palavras-chave</li>
+<li>Características:</li>
+<li>Suporte a comentários de linha e multilinha</li>
+<li>Processamento de strings com sequências de escape</li>
+<li>Contagem de linha e coluna</li>
+<li>Recuperação de erros léxicos</li>
+</ul>
+<h4 id="semantic_analyzerc">semantic_analyzer.c</h4>
+<ul>
+<li>Função: Implementa análise semântica completa</li>
+<li>Funcionalidades:</li>
+<li>Sistema de escopos aninhados</li>
+<li>Verificação de tipos em expressões e atribuições</li>
+<li>Validação de declarações e uso de variáveis</li>
+<li>Verificação de chamadas de função (aridade e tipos)</li>
+<li>Controle de retorno em funções</li>
+<li>Registro e validação de assinaturas de funções</li>
+</ul>
+<h4 id="symbol_tablec">symbol_table.c</h4>
+<ul>
+<li>Função: Implementa tabela de símbolos com hash table</li>
+<li>Características:</li>
+<li>Tabela hash com encadeamento</li>
+<li>Suporte a escopos aninhados via campo <code>parent</code></li>
+<li>Operações de inserção, busca, atualização e remoção</li>
+<li>Funções recursivas para busca em escopos pai</li>
+</ul>
+<h4 id="syntax_analyzerc">syntax_analyzer.c</h4>
+<ul>
+<li>Função: Driver do analisador sintático</li>
+<li>Função: <code>syntax_parse_path()</code> - coordena parsing de arquivo/stdin</li>
+</ul>
+<h4 id="ir_builderc">ir_builder.c</h4>
+<ul>
+<li>Função: Construtor do IR</li>
+</ul>
+<h4 id="irc">IR.c</h4>
+<ul>
+<li>Função gerador do codigo intermediario</li>
+</ul>
+<h4 id="codegen_jsc">codegen_js.c</h4>
+<ul>
+<li>Função gerador final do codigo em js</li>
+</ul>
+<h2 id="srcdrivers">📁 src/drivers/</h2>
+<h3 id="srcdrivers-programas-de-teste-independentes">src/drivers/ - Programas de teste independentes</h3>
+<ul>
+<li>Testes específicos do lexer, parser e pipeline completo</li>
+</ul>
+<h4 id="lexer_driverc">lexer_driver.c</h4>
+<ul>
+<li>Função: Teste independente do analisador léxico</li>
+<li>Funcionalidade: Tokeniza entrada e mostra tokens reconhecidos</li>
+</ul>
+<h4 id="syntax_driverc">syntax_driver.c</h4>
+<ul>
+<li>Função: Teste do analisador sintático</li>
+<li>Funcionalidade: Parsing completo com impressão da AST resultante</li>
+</ul>
+<h4 id="semantic_driverc">semantic_driver.c</h4>
+<ul>
+<li>Função: Teste do pipeline completo (léxico + sintático + semântico)</li>
+<li>Funcionalidade: Executa todas as fases e reporta erros</li>
+</ul>
+<h2 id="arquitetura-geral">Arquitetura Geral</h2>
+<h3 id="fluxo-de-compilacao">Fluxo de Compilação:</h3>
+<ol>
+<li>Análise Léxica (scanner.l) → Tokens</li>
+<li>Análise Sintática (parser.y) → AST</li>
+<li>Análise Semântica (semantic_analyzer.c) → AST Validada</li>
+<li>Tabela de Símbolos (symbol_table.c) → Escopos e Tipos</li>
+</ol>
+<h3 id="caracteristicas-da-linguagem">Características da Linguagem:</h3>
+<ul>
+<li>Tipos: int, float, bool, string, void</li>
+<li>Estruturas: if/else, while, for, functions, return</li>
+<li>Expressões: Aritméticas, relacionais, lógicas</li>
+<li>Escopos: Blocos aninhados com tabela de símbolos hierárquica</li>
+</ul>
+<h3 id="design-patterns">Design Patterns:</h3>
+<ul>
+<li>Visitor Pattern: Para análise semântica e impressão da AST</li>
+<li>Factory Pattern: Construtores de nós em <code>ast_expr.c</code></li>
+<li>Composite Pattern: Estrutura de árvore da AST</li>
+</ul>
 <table>
 <thead>
 <tr>
@@ -1143,9 +1649,9 @@
 <tbody>
 <tr>
 <td>1.0</td>
-<td>14/09/2025</td>
-<td><a href="https://github.com/antonioleaojr" target="_blank">Antônio Júnior</a>, <a href="https://github.com/H3ytt0r62" target="_blank">Heyttor Augusto</a>, <a href="https://github.com/jopesmp" target="_blank">João Pedro Sampaio</a>, <a href="https://github.com/Akaeboshi" target="_blank">Lucas Heler</a>, <a href="https://github.com/macieljuniormax" target="_blank">Maciel Júnior</a></td>
-<td>Primeira versão da gramática formal</td>
+<td>10/11/2025</td>
+<td><a href="https://github.com/akaeboshi">akaeboshi</a></td>
+<td>Documentação completa da arquitetura do compilador incluindo estrutura de pastas, Função dos arquivos e fluxo de compilação</td>
 </tr>
 </tbody>
 </table>
