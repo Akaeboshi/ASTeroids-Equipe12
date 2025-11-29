@@ -242,8 +242,7 @@ int irb_emit_expr(IrFunc *f, Node *e) {
         case ND_BOOL:   return ir_emit_mov(f, ir_bool(e->u.as_bool.value));
 
         case ND_STRING:
-            /* ainda não suportamos operar strings; devolvemos um temp */
-            return ir_emit_mov(f, ir_bool(0));
+            return ir_emit_mov(f, ir_string(e->u.as_string.value));
 
         case ND_IDENT: {
             int t = vt_get(f, e->u.as_ident.name, false, TY_INT, NULL);

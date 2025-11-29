@@ -1,0 +1,8 @@
+// Código gerado automaticamente a partir do IR
+
+function _entry() {
+  let s = "ola";
+  let t = "mundo";
+}
+
+_entry();
